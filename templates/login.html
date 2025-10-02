@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}登入 - Verduno{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h2>登入系統</h2>
+  <form method="POST">
+    <label>帳號：</label><br>
+    <input type="text" name="username" required><br><br>
+    <label>密碼：</label><br>
+    <input type="password" name="password" required><br><br>
+    <button type="submit" class="btn btn-success">登入</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}客戶首頁{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h2>您好，{{ user.username }}</h2>
+  <p>這是您的專屬產品清單：</p>
+  <table border="1" cellpadding="8" cellspacing="0" width="100%">
+    <tr>
+      <th>產品名稱</th>
+      <th>價格 / kg</th>
+    </tr>
+    {% for ui in user_items %}
+    <tr>
+      <td>{{ ui.item.product_name }}</td>
+      <td>
+        {% if ui.custom_price %}
+          {{ ui.custom_price }}
+        {% else %}
+          {{ ui.item.price_per_kg }}
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,242 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #dcdcdc;
+  font-family: Arial, sans-serif;
+}
+
+/* 手機容器 - 固定在 100% */
+.container {
+  width: 100%;
+  max-width: 480px; /* 限制手機寬度 */
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  border: 3px solid #222;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 250px;
+  background-color: #202123;
+  color: white;
+  min-height: 100vh;
+  transition: width 0.3s;
+  overflow: hidden;
+}
+
+.sidebar.collapsed {
+  width: 60px;
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  font-size: 20px;
+  background-color: #1a1a1f;
+}
+
+.toggle-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.sidebar-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-menu li {
+  padding: 15px;
+}
+
+.sidebar-menu li a {
+  color: white;
+  text-decoration: none;
+  display: block;
+}
+
+/* Main content */
+.main-content {
+  flex: 1;
+  padding: 20px;
+  transition: margin-left 0.3s;
+}
+
+.sidebar.collapsed + .main-content {
+  margin-left: 60px;
+}
+
+/* Header */
+.header {
+  padding: 8px;
+  background: #dcdcdc;
+}
+
+.logo {
+  background: #2a0000;
+  color: white;
+  padding: 10px;
+  margin: 0 auto 8px;
+  width: 60%;
+  text-align: center;
+  font-size: 18px;
+  display: flex;
+}
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.user-name,
+.shopping-cart {
+  background: #2a0000;
+  color: white;
+  padding: 8px;
+  flex: 1;
+  text-align: center;
+  font-size: 14px;
+}
+
+/* Ad Block */
+.ad-block {
+  background: #000;
+  color: white;
+  height: 25vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 8px;
+  font-size: 16px;
+}
+
+/* Circle Menu */
+.circle-menu {
+  display: flex;
+  flex-wrap: wrap;              /* 允許換行 */
+  justify-content: space-between;
+  background: green;
+  padding: 12px;
+  margin: 8px;
+  gap: 10px;                    /* 每個圈圈之間的間距 */
+}
+
+.circleBox {
+  flex: 0 0 30%;                /* 每列 3 個 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 15px;
+}
+
+.circle {
+  width: 64px;
+  height: 64px;
+  background: #dcdcdc;
+  border-radius: 50%;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* 各種圈圈 */
+.cowCircle {  
+  background-image: url('/static/img/cow.png');
+}
+
+.chickenCircle {
+  background-image: url('/static/img/chicken.png');
+}
+
+.pigCircle {
+  background-image: url('/static/img/pig.png');
+}
+
+.fishCircle {
+  background-image: url('/static/img/fish.png');
+}
+
+.truffleCircle {
+  background-image: url('/static/img/truffle.png');
+}
+
+.sausageCircle {
+  background-image: url('/static/img/sausage.png');
+}
+
+
+/* Last Time Order */
+.last-order {
+  background: red;
+  padding: 12px;
+  margin: 8px;
+  color: white;
+}
+
+.last-order h3 {
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.order-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.order-item {
+  background: #dcdcdc;
+  height: 80px;
+  border-radius: 6px;
+}
+
+/* Menu Title */
+.menu-title {
+    height: 35px;
+    background-color: #000;
+}
+
+/* Bottom Nav */
+.bottom-nav {
+  display: flex;
+  justify-content: space-between;
+  background: #1976d2;
+  padding: 10px 20px;
+}
+
+.nav-btn {
+  background: #dcdcdc;
+  border: none;
+  padding: 10px 20px;
+  font-size: 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* cow.html */
+.cow-part {
+    width: 480x;
+    height: 240px;
+    background: #dcdcdc;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-image: url('/static/img/cow-part.png');
+}
+
+/* static shopping cart menu */
+.shopping-cart-menu-header {
+}

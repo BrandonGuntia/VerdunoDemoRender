@@ -1,2 +1,1 @@
-# Verduno
-Ordering system with a mobile front end.
+# Verduno-Supply-Chains-System
