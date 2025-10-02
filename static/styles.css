@@ -1,0 +1,51 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+.navbar {
+  position: fixed;  /* 固定在頂部 */
+  top: 0;
+  left: 0;
+  width: 100%;      /* 滿寬 */
+  background-color: #333;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  z-index: 1000;    /* 確保在最上層 */
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+.navbar .nav-links {
+  list-style: none;
+  display: flex;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar .nav-links li {
+  margin-left: 20px;
+}
+
+.navbar .nav-links li a {
+  color: white;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.navbar .nav-links li a:hover {
+  color: #ff9900;
+}
+
+/* 防止內容被navbar遮住 */
+body::before {
+  content: "";
+  display: block;
+  height: 60px; /* navbar 的高度 */
+}
+      /* Main */
+      .card {
+        background: white; padding: 15px; margin-bottom: 20px;
+        border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+     }

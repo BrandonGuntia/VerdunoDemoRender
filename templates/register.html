@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>Register</title>
+  <script>
+    async function register() {
+      const username = document.getElementById("username").value;
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({username, email, password})
+      });
+
+      const data = await response.json();
+      alert(data.message);
+
+      if (response.ok) {
+        // 註冊成功，跳轉到 login 頁
+        window.location.href = "/login";
+      }
+    }
+  </script>
+</head>
+<body>
+  <h2>Register</h2>
+  <input id="username" placeholder="Username"><br><br>
+  <input id="email" placeholder="Email"><br><br>
+  <input id="password" type="password" placeholder="Password"><br><br>
+  <button onclick="register()">Register</button>
+</body>
+</html>

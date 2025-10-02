@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+{% block title %}Edit Customer{% endblock %}
+{% block content %}
+<div class="main">
+<div class="card">
+<h2>Edit Customer</h2>
+<div id="loading">Loading...</div>
+<div id="editForm" style="display: none;">
+<div class="form-group">
+<label>Customer ID:</label>
+<input id="customerId" readonly>
+</div>
+<div class="form-group">
+<label>Customer Name:</label>
+<input id="name" placeholder="Customer Name">
+</div>
+<div class="form-group">
+<label>Email:</label>
+<input id="email" placeholder="Email" type="email">
+</div>
+<div class="form-group">
+<label>Password:</label>
+<input id="password" placeholder="留空表示不修改密碼" type="password">
+</div>
+<div class="form-group">
+<label>Special Item IDs <span class="item-count">(0/99)</span>:</label>
+<textarea id="specialItems" placeholder="輸入產品ID，每行一個或用逗號分隔" rows="6"></textarea>
+<small style="color: #666;">提示：可以輸入最多 99 個產品 ID</small>
+</div>
+<div class="button-group">
+<button onclick="updateCustomer()" class="btn-primary">Update</button>
+<button onclick="deleteCustomer()" class="btn-danger">Delete</button>
+<button onclick="goBack()" class="btn-secondary">Back</button>
+</div>
+</div>
+</div>
+</div>
+<style>
+.form-group {
+margin-bottom: 15px;
+}
+
+.form-group label {
+display: block;
+font-weight: bold;
+margin-bottom: 5px;
+color: #264653;
+}
+
+.item-count {
+font-weight: normal;
+color: #e76f51;
+font-size: 0.9em;
+}
+
+input, textarea {
+display: block;
+width: 100%;
+padding: 10px;
+border: 1px solid #ccc;
+border-radius: 4px;
+box-sizing: border-box;
+font-size: 1em;
+font-family: inherit;
+}
+
+input:readonly {
+background-color: #f0f0f0;
+cursor: not-allowed;
+}
+
+textarea {
+resize: vertical;
+min-height: 100px;
+}
+
+small {
+display: block;
+margin-top: 5px;
+}
+
+.button-group {
+display: flex;
+gap: 10px;
+margin-top: 20px;
+}
+
+button {
+flex: 1;
+padding: 12px;
+border: none;
+border-radius: 4px;
+cursor: pointer;
+font-size: 1em;
+font-weight: bold;
+}
+
+.btn-primary {
+background-color: #2a9d8f;
+color: white;
+}
+
+.btn-primary:hover {
+background-color: #21867a;
+}
+
+.btn-danger {
+background-color: #e76f51;
+color: white;
+}
+
+.btn-danger:hover {
+background-color: #d15b42;
+}
+
+.btn-secondary {
+background-color: #6c757d;
+color: white;
+}
+
+.btn-secondary:hover {
+background-color: #5a6268;
+}
+
+#loading {
+text-align: center;
+padding: 20px;
+color: #666;
+}
+</style>
+<script>
+let currentCustomerId = null;
+
+// 從 URL 獲取客戶 ID
+window.addEventListener('DOMContentLoaded', function() {
+const pathParts = window.location.pathname.split('/');
+currentCustomerId = pathParts[pathParts.length - 1];
+loadCustomer();
+
+// 監聽特殊產品輸入框變化
+document.getElementById('specialItems').addEventListener('input', updateItemCount);
+});
+
+// 更新產品計數
+function updateItemCount() {
+const input = document.getElementById('specialItems').value;
+const items = parseSpecialItems(input);
+const count = items.length;
+const countElement = document.querySelector('.item-count');
+countElement.textContent = `(${count}/99)`;
+countElement.style.color = count > 99 ? '#e74c3c' : '#e76f51';
+}
+
+// 解析特殊產品 ID
+function parseSpecialItems(input) {
+if (!input.trim()) return [];
+// 支持逗號分隔或換行分隔
+return input.split(/[,\n]/)
+.map(item => item.trim())
+.filter(item => item);
+}
+
+// 載入客戶資料
+function loadCustomer() {
+fetch(`/api/customers/${currentCustomerId}`)
+.then(response => {
+if (!response.ok) {
+throw new Error('Customer not found');
+}
+return response.json();
+})
+.then(customer => {
+document.getElementById('customerId').value = customer.id;
+document.getElementById('name').value = customer.name;
+document.getElementById('email').value = customer.email;
+// 將特殊產品 ID 數組轉換為換行分隔的字符串
+const specialItems = customer.special_item_ids || [];
+document.getElementById('specialItems').value = specialItems.join('\n');
+updateItemCount();
+document.getElementById('loading').style.display = 'none';
+document.getElementById('editForm').style.display = 'block';
+})
+.catch(error => {
+console.error('Error loading customer:', error);
+document.getElementById('loading').innerHTML = 
+'<p style="color: red;">載入客戶失敗</p>';
+});
+}
+
+// 更新客戶
+function updateCustomer() {
+const name = document.getElementById('name').value;
+const email = document.getElementById('email').value;
+const password = document.getElementById('password').value;
+const specialItemsInput = document.getElementById('specialItems').value;
+
+if (!name || !email) {
+alert('請填寫名稱和電子郵件');
+return;
+}
+
+// 簡單的電子郵件驗證
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+if (!emailRegex.test(email)) {
+alert('請輸入有效的電子郵件地址');
+return;
+}
+
+const specialItems = parseSpecialItems(specialItemsInput);
+if (specialItems.length > 99) {
+alert('特殊產品 ID 數量不能超過 99 個');
+return;
+}
+
+const updateData = {
+name: name,
+email: email,
+special_item_ids: specialItems
+};
+
+// 只有在輸入密碼時才更新密碼
+if (password) {
+if (password.length < 6) {
+alert('密碼長度至少需要 6 個字元');
+return;
+}
+updateData.password = password;
+}
+
+fetch(`/api/customers/${currentCustomerId}`, {
+method: 'PUT',
+headers: {
+'Content-Type': 'application/json'
+},
+body: JSON.stringify(updateData)
+})
+.then(response => {
+if (!response.ok) {
+return response.json().then(err => {
+throw new Error(err.message || 'Update failed');
+});
+}
+return response.json();
+})
+.then(data => {
+alert(data.message);
+window.location.href = '/customers';
+})
+.catch(error => {
+console.error('Error updating customer:', error);
+alert('更新客戶失敗: ' + error.message);
+});
+}
+
+// 刪除客戶
+function deleteCustomer() {
+if (!confirm('確定要刪除這個客戶嗎？')) {
+return;
+}
+
+fetch(`/api/customers/${currentCustomerId}`, {
+method: 'DELETE'
+})
+.then(response => {
+if (!response.ok) {
+throw new Error('Delete failed');
+}
+return response.json();
+})
+.then(data => {
+alert(data.message);
+window.location.href = '/customers';
+})
+.catch(error => {
+console.error('Error deleting customer:', error);
+alert('刪除客戶失敗');
+});
+}
+
+// 返回客戶列表
+function goBack() {
+window.location.href = '/customers';
+}
+</script>
+{% endblock %}

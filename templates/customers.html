@@ -1,0 +1,324 @@
+{% extends "base.html" %}
+{% block title %}Customer DataBase{% endblock %}
+{% block content %}
+<div class="main">
+<div class="card">
+<h2>Welcome to Customer DataBase</h2>
+
+<!-- 搜索欄 -->
+<div class="search-container">
+<input id="searchInput" type="text" placeholder="🔍 Search by ID or Name..." onkeyup="handleSearch(event)">
+<button onclick="searchCustomers()" class="btn-search">Search</button>
+<button onclick="clearSearch()" class="btn-clear">Clear</button>
+</div>
+
+<div id="customerContainer" class="customer-container"></div>
+
+<h3>Add Customer</h3>
+<input id="name" placeholder="Customer Name">
+<input id="email" placeholder="Email" type="email">
+<input id="password" placeholder="Password" type="password">
+<textarea id="specialItems" placeholder="Special Item IDs (逗號分隔，例如: PROD001, PROD002)" rows="3"></textarea>
+<button onclick="add_customer()">Add</button>
+</div>
+</div>
+<style>
+.search-container {
+display: flex;
+gap: 10px;
+margin: 20px 0;
+}
+
+#searchInput {
+display: block;
+width: 100%;
+margin: 10px 0;
+padding: 8px;
+border: 1px solid #ccc;
+border-radius: 4px;
+box-sizing: border-box;
+}
+
+#searchInput:focus {
+outline: none;
+border-color: #21867a;
+box-shadow: 0 0 5px rgba(42, 157, 143, 0.3);
+}
+
+.btn-search {
+padding: 10px 20px;
+background-color: #2a9d8f;
+color: white;
+border: none;
+border-radius: 4px;
+cursor: pointer;
+font-size: 1em;
+}
+
+.btn-search:hover {
+background-color: #21867a;
+}
+
+.btn-clear {
+padding: 10px 20px;
+background-color: #6c757d;
+color: white;
+border: none;
+border-radius: 4px;
+cursor: pointer;
+font-size: 1em;
+}
+
+.btn-clear:hover {
+background-color: #5a6268;
+}
+
+.customer-container {
+display: flex;
+flex-wrap: wrap;
+gap: 12px;
+margin-top: 20px;
+min-height: 100px;
+}
+
+.customer-card {
+border: 1px solid #ccc;
+border-radius: 8px;
+padding: 12px;
+width: calc(33% - 12px);
+box-shadow: 2px 2px 6px rgba(0,0,0,0.1);
+text-align: center;
+background-color: #f9f9f9;
+transition: transform 0.2s, box-shadow 0.2s;
+cursor: pointer;
+}
+
+.customer-card:hover {
+transform: translateY(-3px);
+box-shadow: 3px 3px 10px rgba(0,0,0,0.2);
+background-color: #f0f0f0;
+}
+
+.customer-id {
+font-size: 0.8em;
+color: #666;
+margin-bottom: 4px;
+}
+
+.customer-name {
+font-weight: bold;
+font-size: 1.1em;
+margin-bottom: 8px;
+color: #264653;
+}
+
+.customer-email {
+color: #2a9d8f;
+font-size: 0.9em;
+margin-bottom: 8px;
+}
+
+.customer-special-items {
+font-size: 0.85em;
+color: #e76f51;
+margin-top: 8px;
+padding-top: 8px;
+border-top: 1px solid #ddd;
+}
+
+.special-items-count {
+font-weight: bold;
+color: #e76f51;
+}
+
+input, textarea {
+display: block;
+width: 100%;
+margin: 10px 0;
+padding: 8px;
+border: 1px solid #ccc;
+border-radius: 4px;
+box-sizing: border-box;
+font-family: inherit;
+}
+
+button {
+width: 100%;
+padding: 10px;
+background-color: #2a9d8f;
+color: white;
+border: none;
+border-radius: 4px;
+cursor: pointer;
+font-size: 1em;
+}
+
+button:hover {
+background-color: #21867a;
+}
+
+.no-results {
+text-align: center;
+padding: 40px;
+color: #666;
+font-size: 1.1em;
+width: 100%;
+}
+</style>
+<script>
+let currentSearchTerm = '';
+
+// 頁面載入時自動獲取客戶
+window.addEventListener('DOMContentLoaded', function() {
+loadCustomers();
+});
+
+// 處理搜索框的 Enter 鍵
+function handleSearch(event) {
+if (event.key === 'Enter') {
+searchCustomers();
+}
+}
+
+// 搜索客戶
+function searchCustomers() {
+const searchInput = document.getElementById('searchInput');
+currentSearchTerm = searchInput.value.trim();
+loadCustomers(currentSearchTerm);
+}
+
+// 清除搜索
+function clearSearch() {
+document.getElementById('searchInput').value = '';
+currentSearchTerm = '';
+loadCustomers();
+}
+
+// 載入客戶列表
+function loadCustomers(searchTerm = '') {
+let url = '/api/customers?limit=100'; // 增加限制以顯示更多搜索結果
+if (searchTerm) {
+url += `&search=${encodeURIComponent(searchTerm)}`;
+}
+
+fetch(url)
+.then(response => {
+if (!response.ok) {
+throw new Error('Network response was not ok');
+}
+return response.json();
+})
+.then(customers => {
+const container = document.getElementById('customerContainer');
+container.innerHTML = '';
+
+if (customers.length === 0) {
+if (searchTerm) {
+container.innerHTML = `<div class="no-results">找不到符合 "${searchTerm}" 的客戶</div>`;
+} else {
+container.innerHTML = '<p class="no-results">目前沒有客戶資料</p>';
+}
+return;
+}
+
+customers.forEach(customer => {
+const customerCard = document.createElement('div');
+customerCard.className = 'customer-card';
+customerCard.onclick = () => editCustomer(customer.id);
+
+const specialItemsCount = customer.special_item_ids ? customer.special_item_ids.length : 0;
+const specialItemsText = specialItemsCount > 0 
+? `<span class="special-items-count">${specialItemsCount}</span> 個特殊產品` 
+: '無特殊產品';
+
+customerCard.innerHTML = `
+<div class="customer-id">ID: ${customer.id}</div>
+<div class="customer-name">${customer.name}</div>
+<div class="customer-email">${customer.email}</div>
+<div class="customer-special-items">${specialItemsText}</div>
+`;
+container.appendChild(customerCard);
+});
+})
+.catch(error => {
+console.error('Error loading customers:', error);
+document.getElementById('customerContainer').innerHTML =
+'<p style="color: red;">載入客戶失敗，請稍後再試</p>';
+});
+}
+
+// 點擊客戶卡片，跳轉到編輯頁面
+function editCustomer(customerId) {
+window.location.href = `/customers/edit/${customerId}`;
+}
+
+// 添加客戶
+function add_customer() {
+const name = document.getElementById('name').value;
+const email = document.getElementById('email').value;
+const password = document.getElementById('password').value;
+const specialItemsInput = document.getElementById('specialItems').value;
+
+if (!name || !email || !password) {
+alert('請填寫名稱、電子郵件和密碼');
+return;
+}
+
+// 密碼長度驗證
+if (password.length < 6) {
+alert('密碼長度至少需要 6 個字元');
+return;
+}
+
+// 簡單的電子郵件驗證
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+if (!emailRegex.test(email)) {
+alert('請輸入有效的電子郵件地址');
+return;
+}
+
+// 處理特殊產品 ID
+let specialItems = [];
+if (specialItemsInput.trim()) {
+specialItems = specialItemsInput.split(',').map(item => item.trim()).filter(item => item);
+if (specialItems.length > 99) {
+alert('特殊產品 ID 數量不能超過 99 個');
+return;
+}
+}
+
+fetch('/api/customers', {
+method: 'POST',
+headers: {
+'Content-Type': 'application/json'
+},
+body: JSON.stringify({
+name: name,
+email: email,
+password: password,
+special_item_ids: specialItems
+})
+})
+.then(response => {
+if (!response.ok) {
+return response.json().then(err => {
+throw new Error(err.message || 'Network response was not ok');
+});
+}
+return response.json();
+})
+.then(data => {
+alert(data.message);
+document.getElementById('name').value = '';
+document.getElementById('email').value = '';
+document.getElementById('password').value = '';
+document.getElementById('specialItems').value = '';
+loadCustomers(currentSearchTerm);
+})
+.catch(error => {
+console.error('Error adding customer:', error);
+alert('添加客戶失敗: ' + error.message);
+});
+}
+</script>
+{% endblock %}
