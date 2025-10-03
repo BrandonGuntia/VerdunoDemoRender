@@ -1,0 +1,464 @@
+{% extends "base.html" %}
+{% block title %}Testing Input - Shopping Cart{% endblock %}
+{% block content %}
+<div class="main">
+<div class="card">
+<h2>🛒 Testing Input - Shopping Cart</h2>
+<p style="color: #666; margin-bottom: 20px;">測試訂單輸入功能</p>
+
+<!-- 當前購物車內容顯示 -->
+<div id="cartDisplay" class="cart-display">
+<h3>Current Cart Items:</h3>
+<div id="cartItems" class="cart-items">
+<p style="color: #999;">購物車是空的</p>
+</div>
+</div>
+
+<!-- 輸入表單 -->
+<div class="input-section">
+<h3>Add Item to Cart</h3>
+
+<div class="form-group">
+<label>Product ID:</label>
+<input id="productId" placeholder="輸入產品 ID (例如: PROD001)" type="text">
+<div id="productInfo" class="info-display"></div>
+</div>
+
+<div class="form-group">
+<label>Customer ID:</label>
+<input id="customerId" placeholder="輸入客戶 ID (例如: 1)" type="number">
+<div id="customerInfo" class="info-display"></div>
+</div>
+
+<div class="form-group">
+<label>Quantity:</label>
+<input id="quantity" placeholder="數量" type="number" min="1" value="1">
+</div>
+
+<div class="form-group">
+<label>Delivery Date:</label>
+<input id="deliveryDate" type="date" class="delivery-date-input">
+<small style="color: #666; display: block; margin-top: 5px;">選擇送貨日期（可選）</small>
+</div>
+
+<div class="button-group">
+<button onclick="addToCart()" class="btn-primary">Add to Cart</button>
+<button onclick="clearCart()" class="btn-secondary">Clear Cart</button>
+<button onclick="submitOrder()" class="btn-success">Submit Order</button>
+</div>
+</div>
+</div>
+</div>
+
+<style>
+.cart-display {
+background-color: #f8f9fa;
+border: 2px solid #2a9d8f;
+border-radius: 8px;
+padding: 20px;
+margin-bottom: 30px;
+}
+
+.cart-display h3 {
+color: #2a9d8f;
+margin-bottom: 15px;
+}
+
+.cart-items {
+min-height: 100px;
+}
+
+.cart-item {
+background-color: white;
+border: 1px solid #ddd;
+border-radius: 6px;
+padding: 15px;
+margin-bottom: 10px;
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+
+.cart-item-info {
+flex: 1;
+}
+
+.cart-item-name {
+font-weight: bold;
+font-size: 1.1em;
+color: #264653;
+margin-bottom: 5px;
+}
+
+.cart-item-details {
+color: #666;
+font-size: 0.9em;
+}
+
+.cart-item-price {
+color: #2a9d8f;
+font-size: 1.2em;
+font-weight: bold;
+text-align: right;
+}
+
+.cart-item-remove {
+background-color: #e76f51;
+color: white;
+border: none;
+padding: 8px 15px;
+border-radius: 4px;
+cursor: pointer;
+margin-left: 15px;
+}
+
+.cart-item-remove:hover {
+background-color: #d15b42;
+}
+
+.input-section {
+background-color: #fff;
+padding: 20px;
+border-radius: 8px;
+}
+
+.form-group {
+margin-bottom: 20px;
+}
+
+.form-group label {
+display: block;
+font-weight: bold;
+margin-bottom: 8px;
+color: #264653;
+}
+
+input {
+width: 100%;
+padding: 10px;
+border: 2px solid #ddd;
+border-radius: 4px;
+font-size: 1em;
+box-sizing: border-box;
+}
+
+input:focus {
+outline: none;
+border-color: #2a9d8f;
+}
+
+.delivery-date-input {
+border: 2px solid #2a9d8f;
+cursor: pointer;
+}
+
+.delivery-date-input:focus {
+border-color: #21867a;
+}
+
+.info-display {
+margin-top: 10px;
+padding: 10px;
+background-color: #e8f5f3;
+border-radius: 4px;
+min-height: 20px;
+}
+
+.info-success {
+color: #2a9d8f;
+font-weight: bold;
+}
+
+.info-error {
+color: #e76f51;
+font-weight: bold;
+}
+
+.button-group {
+display: flex;
+gap: 10px;
+margin-top: 25px;
+}
+
+button {
+flex: 1;
+padding: 12px;
+border: none;
+border-radius: 4px;
+cursor: pointer;
+font-size: 1em;
+font-weight: bold;
+}
+
+.btn-primary {
+background-color: #2a9d8f;
+color: white;
+}
+
+.btn-primary:hover {
+background-color: #21867a;
+}
+
+.btn-secondary {
+background-color: #6c757d;
+color: white;
+}
+
+.btn-secondary:hover {
+background-color: #5a6268;
+}
+
+.btn-success {
+background-color: #52b788;
+color: white;
+}
+
+.btn-success:hover {
+background-color: #40916c;
+}
+
+.cart-summary {
+background-color: #264653;
+color: white;
+padding: 15px;
+border-radius: 6px;
+margin-top: 15px;
+text-align: right;
+}
+
+.cart-summary-total {
+font-size: 1.5em;
+font-weight: bold;
+}
+</style>
+
+<script>
+let cart = [];
+let currentProduct = null;
+let currentCustomer = null;
+
+// 監聽產品 ID 輸入
+document.getElementById('productId').addEventListener('blur', function() {
+const productId = this.value.trim();
+if (productId) {
+fetchProductInfo(productId);
+}
+});
+
+// 監聽客戶 ID 輸入
+document.getElementById('customerId').addEventListener('blur', function() {
+const customerId = this.value.trim();
+if (customerId) {
+fetchCustomerInfo(customerId);
+}
+});
+
+// 獲取產品信息
+function fetchProductInfo(productId) {
+fetch(`/api/products/${productId}`)
+.then(response => {
+if (!response.ok) {
+throw new Error('Product not found');
+}
+return response.json();
+})
+.then(product => {
+currentProduct = product;
+const infoDiv = document.getElementById('productInfo');
+infoDiv.innerHTML = `
+<div class="info-success">
+✓ 產品名稱: ${product.name} | 價格: $${product.price} | 分類: ${product.subclass}
+</div>
+`;
+})
+.catch(error => {
+currentProduct = null;
+document.getElementById('productInfo').innerHTML = `
+<div class="info-error">✗ 找不到產品 ID: ${productId}</div>
+`;
+});
+}
+
+// 獲取客戶信息
+function fetchCustomerInfo(customerId) {
+fetch(`/api/customers/${customerId}`)
+.then(response => {
+if (!response.ok) {
+throw new Error('Customer not found');
+}
+return response.json();
+})
+.then(customer => {
+currentCustomer = customer;
+const infoDiv = document.getElementById('customerInfo');
+infoDiv.innerHTML = `
+<div class="info-success">
+✓ 客戶名稱: ${customer.name} | Email: ${customer.email}
+</div>
+`;
+})
+.catch(error => {
+currentCustomer = null;
+document.getElementById('customerInfo').innerHTML = `
+<div class="info-error">✗ 找不到客戶 ID: ${customerId}</div>
+`;
+});
+}
+
+// 添加到購物車
+function addToCart() {
+if (!currentProduct) {
+alert('請先輸入有效的產品 ID');
+return;
+}
+
+if (!currentCustomer) {
+alert('請先輸入有效的客戶 ID');
+return;
+}
+
+const quantity = parseInt(document.getElementById('quantity').value);
+if (!quantity || quantity <= 0) {
+alert('請輸入有效的數量');
+return;
+}
+
+const deliveryDate = document.getElementById('deliveryDate').value;
+
+const cartItem = {
+product: currentProduct,
+customer: currentCustomer,
+quantity: quantity,
+deliveryDate: deliveryDate || null,
+totalPrice: currentProduct.price * quantity
+};
+
+cart.push(cartItem);
+updateCartDisplay();
+
+// 清空輸入
+document.getElementById('productId').value = '';
+document.getElementById('customerId').value = '';
+document.getElementById('quantity').value = '1';
+document.getElementById('deliveryDate').value = '';
+document.getElementById('productInfo').innerHTML = '';
+document.getElementById('customerInfo').innerHTML = '';
+currentProduct = null;
+currentCustomer = null;
+
+alert('已添加到購物車！');
+}
+
+// 更新購物車顯示
+function updateCartDisplay() {
+const cartItemsDiv = document.getElementById('cartItems');
+
+if (cart.length === 0) {
+cartItemsDiv.innerHTML = '<p style="color: #999;">購物車是空的</p>';
+return;
+}
+
+let html = '';
+let grandTotal = 0;
+
+cart.forEach((item, index) => {
+grandTotal += item.totalPrice;
+const deliveryInfo = item.deliveryDate ? `送貨日期: ${item.deliveryDate}` : '未設定送貨日期';
+html += `
+<div class="cart-item">
+<div class="cart-item-info">
+<div class="cart-item-name">${item.product.name}</div>
+<div class="cart-item-details">
+客戶: ${item.customer.name} | 
+產品ID: ${item.product.id} | 
+單價: $${item.product.price} | 
+數量: ${item.quantity}
+</div>
+<div class="cart-item-details" style="color: #e76f51; margin-top: 5px;">
+📅 ${deliveryInfo}
+</div>
+</div>
+<div class="cart-item-price">$${item.totalPrice.toFixed(2)}</div>
+<button class="cart-item-remove" onclick="removeFromCart(${index})">Remove</button>
+</div>
+`;
+});
+
+html += `
+<div class="cart-summary">
+<div>總計: <span class="cart-summary-total">$${grandTotal.toFixed(2)}</span></div>
+<div style="font-size: 0.9em; margin-top: 5px;">共 ${cart.length} 項商品</div>
+</div>
+`;
+
+cartItemsDiv.innerHTML = html;
+}
+
+// 從購物車移除
+function removeFromCart(index) {
+cart.splice(index, 1);
+updateCartDisplay();
+}
+
+// 清空購物車
+function clearCart() {
+if (cart.length === 0) {
+alert('購物車已經是空的');
+return;
+}
+
+if (confirm('確定要清空購物車嗎？')) {
+cart = [];
+updateCartDisplay();
+}
+}
+
+// 提交訂單
+function submitOrder() {
+if (cart.length === 0) {
+alert('購物車是空的，無法提交訂單');
+return;
+}
+
+if (!confirm(`確定要提交 ${cart.length} 個訂單嗎？`)) {
+return;
+}
+
+// 逐個創建訂單
+const promises = cart.map(item => {
+const orderData = {
+customer_id: item.customer.id,
+product_id: item.product.id,
+quantity: item.quantity
+};
+
+// 如果有送貨日期，加入訂單資料
+if (item.deliveryDate) {
+orderData.delivery_date = item.deliveryDate;
+}
+
+return fetch('/api/orders', {
+method: 'POST',
+headers: {
+'Content-Type': 'application/json'
+},
+body: JSON.stringify(orderData)
+});
+});
+
+Promise.all(promises)
+.then(responses => Promise.all(responses.map(r => r.json())))
+.then(results => {
+alert(`成功創建 ${results.length} 個訂單！`);
+cart = [];
+updateCartDisplay();
+// 跳轉到訂單列表
+window.location.href = '/invoices';
+})
+.catch(error => {
+console.error('Error submitting orders:', error);
+alert('提交訂單時發生錯誤');
+});
+}
+</script>
+{% endblock %}

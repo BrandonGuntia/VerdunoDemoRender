@@ -6,6 +6,7 @@ from routes.products import products_bp
 from routes.customers import customers_bp
 from routes.auth import auth_bp
 from routes.messages import messages_bp
+from routes.orders import orders_bp  # 新增
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -17,6 +18,7 @@ app.register_blueprint(products_bp, url_prefix="/api/products")
 app.register_blueprint(customers_bp, url_prefix="/api/customers")
 app.register_blueprint(auth_bp, url_prefix="/api/auth")
 app.register_blueprint(messages_bp, url_prefix="/api/messages")
+app.register_blueprint(orders_bp, url_prefix="/api/orders")  # 新增
 
 @app.route("/")
 def index():
@@ -38,6 +40,23 @@ def customers_page():
 def customer_edit_page(customer_id):
     return render_template("customer_edit.html")
 
+# 新增的路由
+@app.route("/testing-input")
+def testing_input_page():
+    return render_template("testing_input.html")
+
+@app.route("/invoices")
+def invoices_page():
+    return render_template("invoices.html")
+
+@app.route("/invoices/edit/<int:order_id>")
+def invoice_edit_page(order_id):
+    return render_template("invoice_edit.html")
+
+@app.route("/orders-list")
+def orders_list_page():
+    return render_template("orders_list.html")
+
 @app.route("/login")
 def login_page():
     return render_template("login.html")
@@ -45,9 +64,6 @@ def login_page():
 @app.route("/register")
 def register_page():
     return render_template("register.html")
-
-
-
 
 with app.app_context():
     db.create_all()

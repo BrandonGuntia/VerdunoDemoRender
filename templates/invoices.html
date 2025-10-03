@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+{% block title %}Invoices System{% endblock %}
+{% block content %}
+<div class="main">
+<div class="card">
+<h2>📄 Invoices System</h2>
+
+<!-- 搜索欄 -->
+<div class="search-container">
+<input id="searchInput" type="text" placeholder="🔍 Search by Invoice Number or Customer Name..." onkeyup="handleSearch(event)">
+<button onclick="searchInvoices()" class="btn-search">Search</button>
+<button onclick="clearSearch()" class="btn-clear">Clear</button>
+</div>
+
+<!-- 發票列表 -->
+<div id="invoicesContainer" class="invoices-container"></div>
+</div>
+</div>
+
+<style>
+.search-container {
+display: flex;
+gap: 10px;
+margin: 20px 0;
+}
+
+#searchInput {
+flex: 1;
+padding: 10px;
+border: 2px solid #2a9d8f;
+border-radius: 4px;
+font-size: 1em;
+}
+
+#searchInput:focus {
+outline: none;
+border-color: #21867a;
+box-shadow: 0 0 5px rgba(42, 157, 143, 0.3);
+}
+
+.btn-search {
+padding: 10px 20px;
+background-color: #2a9d8f;
+color: white;
+border: none;
+border-radius: 4px;
+cursor: pointer;
+font-size: 1em;
+}
+
+.btn-search:hover {
+background-color: #21867a;
+}
+
+.btn-clear {
+padding: 10px 20px;
+background-color: #6c757d;
+color: white;
+border: none;
+border-radius: 4px;
+cursor: pointer;
+font-size: 1em;
+}
+
+.btn-clear:hover {
+background-color: #5a6268;
+}
+
+.invoices-container {
+margin-top: 20px;
+}
+
+.invoice-card {
+background-color: #f9f9f9;
+border: 1px solid #ddd;
+border-radius: 8px;
+padding: 15px;
+margin-bottom: 15px;
+cursor: pointer;
+transition: all 0.2s;
+}
+
+.invoice-card:hover {
+transform: translateY(-2px);
+box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+background-color: #f0f0f0;
+}
+
+.invoice-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 10px;
+}
+
+.invoice-number {
+font-weight: bold;
+font-size: 1.2em;
+color: #264653;
+}
+
+.invoice-status {
+padding: 5px 15px;
+border-radius: 20px;
+font-size: 0.9em;
+font-weight: bold;
+}
+
+.status-pending {
+background-color: #ffd60a;
+color: #333;
+}
+
+.status-completed {
+background-color: #52b788;
+color: white;
+}
+
+.status-cancelled {
+background-color: #e76f51;
+color: white;
+}
+
+.invoice-details {
+color: #666;
+font-size: 0.95em;
+}
+
+.invoice-details div {
+margin: 5px 0;
+}
+
+.invoice-customer {
+font-weight: bold;
+color: #2a9d8f;
+}
+
+.invoice-total {
+font-weight: bold;
+color: #e76f51;
+font-size: 1.1em;
+}
+
+.no-results {
+text-align: center;
+padding: 40px;
+color: #666;
+font-size: 1.1em;
+}
+</style>
+
+<script>
+let currentSearchTerm = '';
+
+// 頁面載入時獲取發票
+window.addEventListener('DOMContentLoaded', function() {
+loadInvoices();
+});
+
+// 處理搜索框的 Enter 鍵
+function handleSearch(event) {
+if (event.key === 'Enter') {
+searchInvoices();
+}
+}
+
+// 搜索發票
+function searchInvoices() {
+const searchInput = document.getElementById('searchInput');
+currentSearchTerm = searchInput.value.trim();
+loadInvoices(currentSearchTerm);
+}
+
+// 清除搜索
+function clearSearch() {
+document.getElementById('searchInput').value = '';
+currentSearchTerm = '';
+loadInvoices();
+}
+
+// 載入發票列表
+function loadInvoices(searchTerm = '') {
+let url = '/api/orders';
+if (searchTerm) {
+url += `?search=${encodeURIComponent(searchTerm)}`;
+}
+
+fetch(url)
+.then(response => {
+if (!response.ok) {
+throw new Error('Network response was not ok');
+}
+return response.json();
+})
+.then(orders => {
+const container = document.getElementById('invoicesContainer');
+container.innerHTML = '';
+
+if (orders.length === 0) {
+if (searchTerm) {
+container.innerHTML = `<div class="no-results">找不到符合 "${searchTerm}" 的發票</div>`;
+} else {
+container.innerHTML = '<div class="no-results">目前沒有發票資料</div>';
+}
+return;
+}
+
+orders.forEach(order => {
+const statusClass = `status-${order.status.toLowerCase()}`;
+const orderCard = document.createElement('div');
+orderCard.className = 'invoice-card';
+orderCard.onclick = () => viewInvoice(order.id);
+orderCard.innerHTML = `
+<div class="invoice-header">
+<div class="invoice-number">${order.invoice_number}</div>
+<div class="invoice-status ${statusClass}">${order.status}</div>
+</div>
+<div class="invoice-details">
+<div class="invoice-customer">客戶: ${order.customer_name}</div>
+<div>產品: ${order.product_name}</div>
+<div>數量: ${order.quantity} | 單價: ${order.product_price.toFixed(2)}</div>
+<div>訂單日期: ${order.order_date}</div>
+<div class="invoice-total">總價: ${order.total_price.toFixed(2)}</div>
+</div>
+`;
+container.appendChild(orderCard);
+});
+})
+.catch(error => {
+console.error('Error loading invoices:', error);
+document.getElementById('invoicesContainer').innerHTML =
+'<div class="no-results" style="color: red;">載入發票失敗，請稍後再試</div>';
+});
+}
+
+// 查看發票詳情
+function viewInvoice(orderId) {
+window.location.href = `/invoices/edit/${orderId}`;
+}
+</script>
+{% endblock %}

@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 import json
 
 db = SQLAlchemy()
@@ -14,17 +15,15 @@ class Product(db.Model):
 
 class Customer(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(120), nullable=False)  # 改為 name
+    name = db.Column(db.String(120), nullable=False)
     password = db.Column(db.String(200), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    special_item_ids = db.Column(db.String(2000), default='[]')  # 存儲 JSON 數組，最多 99 個
+    special_item_ids = db.Column(db.String(2000), default='[]')
     
     def get_special_items(self):
-        """獲取特殊產品 ID 列表"""
         return json.loads(self.special_item_ids) if self.special_item_ids else []
     
     def set_special_items(self, items):
-        """設置特殊產品 ID 列表（最多 99 個）"""
         if len(items) > 99:
             items = items[:99]
         self.special_item_ids = json.dumps(items)
@@ -39,3 +38,39 @@ class Message(db.Model):
     
     def __repr__(self):
         return f'<Message from {self.user}>'
+
+class Order(db.Model):
+    __tablename__ = 'orders'  # 重要：指定表名為 'orders' 而不是 'order'
+    
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=False)
+    product_id = db.Column(db.String(50), db.ForeignKey('product.id'), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
+    total_price = db.Column(db.Float, nullable=False)
+    order_date = db.Column(db.DateTime, default=datetime.utcnow)
+    delivery_date = db.Column(db.Date, nullable=True)
+    invoice_number = db.Column(db.String(50), unique=True, nullable=False)
+    status = db.Column(db.String(20), default='Pending')
+    
+    # 關聯
+    customer = db.relationship('Customer', backref='orders')
+    product = db.relationship('Product', backref='orders')
+    
+    def __repr__(self):
+        return f'<Order {self.invoice_number}>'
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'customer_id': self.customer_id,
+            'customer_name': self.customer.name if self.customer else 'Unknown',
+            'product_id': self.product_id,
+            'product_name': self.product.name if self.product else 'Unknown',
+            'product_price': self.product.price if self.product else 0,
+            'quantity': self.quantity,
+            'total_price': self.total_price,
+            'order_date': self.order_date.strftime('%Y-%m-%d %H:%M:%S'),
+            'delivery_date': self.delivery_date.strftime('%Y-%m-%d') if self.delivery_date else None,
+            'invoice_number': self.invoice_number,
+            'status': self.status
+        }

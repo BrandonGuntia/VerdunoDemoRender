@@ -1,0 +1,387 @@
+{% extends "base.html" %}
+{% block title %}Invoice Details{% endblock %}
+{% block content %}
+<div class="main">
+<div class="card">
+<h2>📄 Invoice Details</h2>
+<div id="loading">Loading...</div>
+<div id="invoiceDetails" style="display: none;">
+<!-- 發票信息 -->
+<div class="invoice-info-section">
+<div class="info-row">
+<span class="info-label">Invoice Number:</span>
+<span id="invoiceNumber" class="info-value"></span>
+</div>
+<div class="info-row">
+<span class="info-label">Order Date:</span>
+<span id="orderDate" class="info-value"></span>
+</div>
+<div class="info-row">
+<span class="info-label">Status:</span>
+<select id="status" class="status-select">
+<option value="Pending">Pending</option>
+<option value="Completed">Completed</option>
+<option value="Cancelled">Cancelled</option>
+</select>
+</div>
+</div>
+
+<!-- 客戶信息 -->
+<div class="section-title">Customer Information</div>
+<div class="invoice-info-section">
+<div class="info-row">
+<span class="info-label">Customer ID:</span>
+<span id="customerId" class="info-value"></span>
+</div>
+<div class="info-row">
+<span class="info-label">Customer Name:</span>
+<span id="customerName" class="info-value"></span>
+</div>
+</div>
+
+<!-- 產品信息 -->
+<div class="section-title">Product Information</div>
+<div class="invoice-info-section">
+<div class="info-row">
+<span class="info-label">Product ID:</span>
+<span id="productId" class="info-value"></span>
+</div>
+<div class="info-row">
+<span class="info-label">Product Name:</span>
+<span id="productName" class="info-value"></span>
+</div>
+<div class="info-row">
+<span class="info-label">Unit Price:</span>
+<span id="unitPrice" class="info-value"></span>
+</div>
+<div class="info-row">
+<span class="info-label">Quantity:</span>
+<input id="quantity" type="number" min="1" class="quantity-input">
+</div>
+</div>
+
+<!-- 總價 -->
+<div class="total-section">
+<div class="total-label">Total Amount:</div>
+<div id="totalPrice" class="total-value"></div>
+</div>
+
+<!-- 按鈕組 -->
+<div class="button-group">
+<button onclick="updateInvoice()" class="btn-primary">Update</button>
+<button onclick="downloadPDF()" class="btn-pdf">Download PDF</button>
+<button onclick="deleteInvoice()" class="btn-danger">Delete</button>
+<button onclick="goBack()" class="btn-secondary">Back</button>
+</div>
+</div>
+</div>
+</div>
+
+<style>
+.invoice-info-section {
+background-color: #f8f9fa;
+border: 1px solid #ddd;
+border-radius: 8px;
+padding: 20px;
+margin-bottom: 20px;
+}
+
+.section-title {
+font-size: 1.2em;
+font-weight: bold;
+color: #264653;
+margin: 25px 0 15px 0;
+padding-bottom: 10px;
+border-bottom: 2px solid #2a9d8f;
+}
+
+.info-row {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 10px 0;
+border-bottom: 1px solid #e0e0e0;
+}
+
+.info-row:last-child {
+border-bottom: none;
+}
+
+.info-label {
+font-weight: bold;
+color: #666;
+flex: 0 0 200px;
+}
+
+.info-value {
+color: #264653;
+flex: 1;
+text-align: right;
+}
+
+.status-select {
+padding: 8px 15px;
+border: 2px solid #2a9d8f;
+border-radius: 4px;
+font-size: 1em;
+background-color: white;
+cursor: pointer;
+}
+
+.status-select:focus {
+outline: none;
+border-color: #21867a;
+}
+
+.date-input {
+padding: 8px 15px;
+border: 2px solid #2a9d8f;
+border-radius: 4px;
+font-size: 1em;
+background-color: white;
+cursor: pointer;
+flex: 1;
+text-align: right;
+}
+
+.date-input:focus {
+outline: none;
+border-color: #21867a;
+}
+
+.quantity-input {
+width: 100px;
+padding: 8px;
+border: 2px solid #2a9d8f;
+border-radius: 4px;
+font-size: 1em;
+text-align: right;
+}
+
+.quantity-input:focus {
+outline: none;
+border-color: #21867a;
+}
+
+.total-section {
+background-color: #264653;
+color: white;
+padding: 20px;
+border-radius: 8px;
+margin: 30px 0 20px 0;
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+
+.total-label {
+font-size: 1.3em;
+font-weight: bold;
+}
+
+.total-value {
+font-size: 2em;
+font-weight: bold;
+}
+
+.button-group {
+display: flex;
+gap: 10px;
+margin-top: 25px;
+}
+
+button {
+flex: 1;
+padding: 12px;
+border: none;
+border-radius: 4px;
+cursor: pointer;
+font-size: 1em;
+font-weight: bold;
+}
+
+.btn-primary {
+background-color: #2a9d8f;
+color: white;
+}
+
+.btn-primary:hover {
+background-color: #21867a;
+}
+
+.btn-pdf {
+background-color: #e63946;
+color: white;
+}
+
+.btn-pdf:hover {
+background-color: #d62839;
+}
+
+.btn-danger {
+background-color: #e76f51;
+color: white;
+}
+
+.btn-danger:hover {
+background-color: #d15b42;
+}
+
+.btn-secondary {
+background-color: #6c757d;
+color: white;
+}
+
+.btn-secondary:hover {
+background-color: #5a6268;
+}
+
+#loading {
+text-align: center;
+padding: 40px;
+color: #666;
+font-size: 1.1em;
+}
+</style>
+
+<script>
+let currentOrderId = null;
+let currentOrder = null;
+
+// 從 URL 獲取訂單 ID
+window.addEventListener('DOMContentLoaded', function() {
+const pathParts = window.location.pathname.split('/');
+currentOrderId = pathParts[pathParts.length - 1];
+loadInvoice();
+
+// 監聽數量變化以更新總價
+document.getElementById('quantity').addEventListener('input', updateTotalPrice);
+});
+
+// 載入發票資料
+function loadInvoice() {
+fetch(`/api/orders/${currentOrderId}`)
+.then(response => {
+if (!response.ok) {
+throw new Error('Invoice not found');
+}
+return response.json();
+})
+.then(order => {
+currentOrder = order;
+displayInvoice(order);
+document.getElementById('loading').style.display = 'none';
+document.getElementById('invoiceDetails').style.display = 'block';
+})
+.catch(error => {
+console.error('Error loading invoice:', error);
+document.getElementById('loading').innerHTML = 
+'<p style="color: red;">載入發票失敗</p>';
+});
+}
+
+// 顯示發票資料
+function displayInvoice(order) {
+document.getElementById('invoiceNumber').textContent = order.invoice_number;
+document.getElementById('orderDate').textContent = order.order_date;
+document.getElementById('deliveryDate').value = order.delivery_date || '';
+document.getElementById('status').value = order.status;
+document.getElementById('customerId').textContent = order.customer_id;
+document.getElementById('customerName').textContent = order.customer_name;
+document.getElementById('productId').textContent = order.product_id;
+document.getElementById('productName').textContent = order.product_name;
+document.getElementById('unitPrice').textContent = `${order.product_price.toFixed(2)}`;
+document.getElementById('quantity').value = order.quantity;
+updateTotalPrice();
+}getElementById('quantity').value = order.quantity;
+updateTotalPrice();
+}
+
+// 更新總價顯示
+function updateTotalPrice() {
+const quantity = parseInt(document.getElementById('quantity').value) || 0;
+const unitPrice = currentOrder.product_price;
+const total = quantity * unitPrice;
+document.getElementById('totalPrice').textContent = `$${total.toFixed(2)}`;
+}
+
+// 更新發票
+function updateInvoice() {
+const quantity = parseInt(document.getElementById('quantity').value);
+const status = document.getElementById('status').value;
+const deliveryDate = document.getElementById('deliveryDate').value;
+
+if (!quantity || quantity <= 0) {
+alert('請輸入有效的數量');
+return;
+}
+
+const updateData = {
+quantity: quantity,
+status: status
+};
+
+// 如果有設定送貨日期，加入更新資料
+if (deliveryDate) {
+updateData.delivery_date = deliveryDate;
+}
+
+fetch(`/api/orders/${currentOrderId}`, {
+method: 'PUT',
+headers: {
+'Content-Type': 'application/json'
+},
+body: JSON.stringify(updateData)
+})
+.then(response => {
+if (!response.ok) {
+throw new Error('Update failed');
+}
+return response.json();
+})
+.then(data => {
+alert('發票更新成功！');
+loadInvoice();
+})
+.catch(error => {
+console.error('Error updating invoice:', error);
+alert('更新發票失敗');
+});
+}
+
+// 下載 PDF
+function downloadPDF() {
+window.open(`/api/orders/${currentOrderId}/pdf`, '_blank');
+}
+
+// 刪除發票
+function deleteInvoice() {
+if (!confirm('確定要刪除這張發票嗎？此操作無法撤銷！')) {
+return;
+}
+
+fetch(`/api/orders/${currentOrderId}`, {
+method: 'DELETE'
+})
+.then(response => {
+if (!response.ok) {
+throw new Error('Delete failed');
+}
+return response.json();
+})
+.then(data => {
+alert('發票刪除成功！');
+window.location.href = '/invoices';
+})
+.catch(error => {
+console.error('Error deleting invoice:', error);
+alert('刪除發票失敗');
+});
+}
+
+// 返回發票列表
+function goBack() {
+window.location.href = '/invoices';
+}
+</script>
+{% endblock %}
