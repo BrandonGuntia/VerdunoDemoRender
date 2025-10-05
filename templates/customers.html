@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% block title %}Customer DataBase{% endblock %}
+{% block title %}Customer Database{% endblock %}
 {% block content %}
 <div class="main">
 <div class="card">
-<h2>Welcome to Customer DataBase</h2>
+<h2>Welcome to Customer Database</h2>
 
 <!-- 搜索欄 -->
 <div class="search-container">
@@ -18,59 +18,82 @@
 <input id="name" placeholder="Customer Name">
 <input id="email" placeholder="Email" type="email">
 <input id="password" placeholder="Password" type="password">
-<textarea id="specialItems" placeholder="Special Item IDs (逗號分隔，例如: PROD001, PROD002)" rows="3"></textarea>
+<textarea id="specialItems" placeholder="Special Item IDs (comma separated, e.g.: PROD001, PROD002)" rows="3"></textarea>
 <button onclick="add_customer()">Add</button>
 </div>
 </div>
 <style>
 .search-container {
-display: flex;
-gap: 10px;
-margin: 20px 0;
+    display: flex;
+    gap: 10px;
+    margin: 20px 0;
+    align-items: center; /* 垂直居中對齊 */
 }
 
 #searchInput {
-display: block;
-width: 100%;
-margin: 10px 0;
-padding: 8px;
-border: 1px solid #ccc;
-border-radius: 4px;
-box-sizing: border-box;
+    flex: 0 0 50%; /* 固定佔 50% 寬度 */
+    padding: 12px 15px; /* 增加內邊距讓輸入框更舒適 */
+    border: 2px solid #2a9d8f;
+    border-radius: 6px; /* 增加圓角 */
+    font-size: 1em;
+    transition: all 0.3s ease; /* 添加平滑過渡效果 */
 }
 
 #searchInput:focus {
-outline: none;
-border-color: #21867a;
-box-shadow: 0 0 5px rgba(42, 157, 143, 0.3);
+    outline: none;
+    border-color: #21867a;
+    box-shadow: 0 0 8px rgba(42, 157, 143, 0.4); /* 增強陰影效果 */
+    transform: translateY(-1px); /* 輕微上移效果 */
 }
 
 .btn-search {
-padding: 10px 20px;
-background-color: #2a9d8f;
-color: white;
-border: none;
-border-radius: 4px;
-cursor: pointer;
-font-size: 1em;
+    flex: 0 0 25%; /* 固定佔 25% 寬度 */
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #2a9d8f 0%, #21867a 100%); /* 漸變背景 */
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 600; /* 加粗字體 */
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(42, 157, 143, 0.2); /* 添加陰影 */
 }
 
 .btn-search:hover {
-background-color: #21867a;
+    background: linear-gradient(135deg, #21867a 0%, #1a6b5f 100%);
+    transform: translateY(-2px); /* 懸停時上移 */
+    box-shadow: 0 4px 8px rgba(42, 157, 143, 0.3); /* 增強陰影 */
+}
+
+.btn-search:active {
+    transform: translateY(0); /* 點擊時恢復 */
+    box-shadow: 0 2px 4px rgba(42, 157, 143, 0.2);
 }
 
 .btn-clear {
-padding: 10px 20px;
-background-color: #6c757d;
-color: white;
-border: none;
-border-radius: 4px;
-cursor: pointer;
-font-size: 1em;
+    flex: 0 0 25%; /* 固定佔 25% 寬度 */
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%); /* 漸變背景 */
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 600; /* 加粗字體 */
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(108, 117, 125, 0.2); /* 添加陰影 */
 }
 
 .btn-clear:hover {
-background-color: #5a6268;
+    background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+    transform: translateY(-2px); /* 懸停時上移 */
+    box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3); /* 增強陰影 */
+}
+
+.btn-clear:active {
+    transform: translateY(0); /* 點擊時恢復 */
+    box-shadow: 0 2px 4px rgba(108, 117, 125, 0.2);
 }
 
 .customer-container {
@@ -168,7 +191,7 @@ width: 100%;
 <script>
 let currentSearchTerm = '';
 
-// 頁面載入時自動獲取客戶資料
+// 頁面載入時自動獲取客戶
 window.addEventListener('DOMContentLoaded', function() {
 loadCustomers();
 });
@@ -196,7 +219,7 @@ loadCustomers();
 
 // 載入客戶列表
 function loadCustomers(searchTerm = '') {
-let url = '/api/customers?limit=100'; // 增加限制以顯示更多搜索結果
+let url = '/api/customers?limit=100';
 if (searchTerm) {
 url += `&search=${encodeURIComponent(searchTerm)}`;
 }
@@ -214,9 +237,9 @@ container.innerHTML = '';
 
 if (customers.length === 0) {
 if (searchTerm) {
-container.innerHTML = `<div class="no-results">找不到符合 "${searchTerm}" 的客戶</div>`;
+container.innerHTML = `<div class="no-results">No customers found matching "${searchTerm}"</div>`;
 } else {
-container.innerHTML = '<p class="no-results">目前沒有客戶資料</p>';
+container.innerHTML = '<p class="no-results">No customer data available</p>';
 }
 return;
 }
@@ -228,8 +251,8 @@ customerCard.onclick = () => editCustomer(customer.id);
 
 const specialItemsCount = customer.special_item_ids ? customer.special_item_ids.length : 0;
 const specialItemsText = specialItemsCount > 0 
-? `<span class="special-items-count">${specialItemsCount}</span> 個特殊產品` 
-: '無特殊產品';
+? `<span class="special-items-count">${specialItemsCount}</span> special items` 
+: 'No special items';
 
 customerCard.innerHTML = `
 <div class="customer-id">ID: ${customer.id}</div>
@@ -243,7 +266,7 @@ container.appendChild(customerCard);
 .catch(error => {
 console.error('Error loading customers:', error);
 document.getElementById('customerContainer').innerHTML =
-'<p style="color: red;">載入客戶失敗，請稍後再試</p>';
+'<p style="color: red;">Failed to load customers. Please try again later.</p>';
 });
 }
 
@@ -260,20 +283,20 @@ const password = document.getElementById('password').value;
 const specialItemsInput = document.getElementById('specialItems').value;
 
 if (!name || !email || !password) {
-alert('請填寫名稱、電子郵件和密碼');
+alert('Please fill in name, email, and password');
 return;
 }
 
 // 密碼長度驗證
 if (password.length < 6) {
-alert('密碼長度至少需要 6 個字元');
+alert('Password must be at least 6 characters long');
 return;
 }
 
 // 簡單的電子郵件驗證
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 if (!emailRegex.test(email)) {
-alert('請輸入有效的電子郵件地址');
+alert('Please enter a valid email address');
 return;
 }
 
@@ -282,7 +305,7 @@ let specialItems = [];
 if (specialItemsInput.trim()) {
 specialItems = specialItemsInput.split(',').map(item => item.trim()).filter(item => item);
 if (specialItems.length > 99) {
-alert('特殊產品 ID 數量不能超過 99 個');
+alert('Special item IDs cannot exceed 99');
 return;
 }
 }
@@ -317,7 +340,7 @@ loadCustomers(currentSearchTerm);
 })
 .catch(error => {
 console.error('Error adding customer:', error);
-alert('添加客戶失敗: ' + error.message);
+alert('Failed to add customer: ' + error.message);
 });
 }
 </script>

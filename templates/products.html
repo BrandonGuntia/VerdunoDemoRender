@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% block title %}Product DataBase{% endblock %}
+{% block title %}Product Database{% endblock %}
 {% block content %}
 <div class="main">
 <div class="card">
-<h2>Welcome to Product DataBase</h2>
+<h2>Welcome to Product Database</h2>
 
 <!-- 搜索欄 -->
 <div class="search-container">
@@ -24,53 +24,76 @@
 </div>
 <style>
 .search-container {
-display: flex;
-gap: 10px;
-margin: 20px 0;
+    display: flex;
+    gap: 10px;
+    margin: 20px 0;
+    align-items: center; /* 垂直居中對齊 */
 }
 
 #searchInput {
-display: block;
-width: 100%;
-margin: 10px 0;
-padding: 8px;
-border: 1px solid #ccc;
-border-radius: 4px;
-box-sizing: border-box;
+    flex: 0 0 50%; /* 固定佔 50% 寬度 */
+    padding: 12px 15px; /* 增加內邊距讓輸入框更舒適 */
+    border: 2px solid #2a9d8f;
+    border-radius: 6px; /* 增加圓角 */
+    font-size: 1em;
+    transition: all 0.3s ease; /* 添加平滑過渡效果 */
 }
 
 #searchInput:focus {
-outline: none;
-border-color: #21867a;
-box-shadow: 0 0 5px rgba(42, 157, 143, 0.3);
+    outline: none;
+    border-color: #21867a;
+    box-shadow: 0 0 8px rgba(42, 157, 143, 0.4); /* 增強陰影效果 */
+    transform: translateY(-1px); /* 輕微上移效果 */
 }
 
 .btn-search {
-padding: 10px 20px;
-background-color: #2a9d8f;
-color: white;
-border: none;
-border-radius: 4px;
-cursor: pointer;
-font-size: 1em;
+    flex: 0 0 25%; /* 固定佔 25% 寬度 */
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #2a9d8f 0%, #21867a 100%); /* 漸變背景 */
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 600; /* 加粗字體 */
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(42, 157, 143, 0.2); /* 添加陰影 */
 }
 
 .btn-search:hover {
-background-color: #21867a;
+    background: linear-gradient(135deg, #21867a 0%, #1a6b5f 100%);
+    transform: translateY(-2px); /* 懸停時上移 */
+    box-shadow: 0 4px 8px rgba(42, 157, 143, 0.3); /* 增強陰影 */
+}
+
+.btn-search:active {
+    transform: translateY(0); /* 點擊時恢復 */
+    box-shadow: 0 2px 4px rgba(42, 157, 143, 0.2);
 }
 
 .btn-clear {
-padding: 10px 20px;
-background-color: #6c757d;
-color: white;
-border: none;
-border-radius: 4px;
-cursor: pointer;
-font-size: 1em;
+    flex: 0 0 25%; /* 固定佔 25% 寬度 */
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%); /* 漸變背景 */
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 600; /* 加粗字體 */
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(108, 117, 125, 0.2); /* 添加陰影 */
 }
 
 .btn-clear:hover {
-background-color: #5a6268;
+    background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+    transform: translateY(-2px); /* 懸停時上移 */
+    box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3); /* 增強陰影 */
+}
+
+.btn-clear:active {
+    transform: translateY(0); /* 點擊時恢復 */
+    box-shadow: 0 2px 4px rgba(108, 117, 125, 0.2);
 }
 
 .product-container {
@@ -188,7 +211,7 @@ loadProducts();
 
 // 載入產品列表
 function loadProducts(searchTerm = '') {
-let url = '/api/products?limit=100'; // 增加限制以顯示更多搜索結果
+let url = '/api/products?limit=100';
 if (searchTerm) {
 url += `&search=${encodeURIComponent(searchTerm)}`;
 }
@@ -206,9 +229,9 @@ container.innerHTML = '';
 
 if (products.length === 0) {
 if (searchTerm) {
-container.innerHTML = `<div class="no-results">找不到符合 "${searchTerm}" 的產品</div>`;
+container.innerHTML = `<div class="no-results">No products found matching "${searchTerm}"</div>`;
 } else {
-container.innerHTML = '<p class="no-results">目前沒有產品資料</p>';
+container.innerHTML = '<p class="no-results">No product data available</p>';
 }
 return;
 }
@@ -229,7 +252,7 @@ container.appendChild(productCard);
 .catch(error => {
 console.error('Error loading products:', error);
 document.getElementById('productContainer').innerHTML =
-'<p style="color: red;">載入產品失敗，請稍後再試</p>';
+'<p style="color: red;">Failed to load products. Please try again later.</p>';
 });
 }
 
@@ -246,7 +269,7 @@ const price = document.getElementById('price').value;
 const subclass = document.getElementById('subclass').value;
 
 if (!productId || !name || !price || !subclass) {
-alert('請填寫所有欄位');
+alert('Please fill in all fields');
 return;
 }
 
@@ -280,7 +303,7 @@ loadProducts(currentSearchTerm);
 })
 .catch(error => {
 console.error('Error adding product:', error);
-alert('添加產品失敗: ' + error.message);
+alert('Failed to add product: ' + error.message);
 });
 }
 </script>

@@ -4,13 +4,13 @@
 <div class="main">
 <div class="card">
 <h2>🛒 Testing Input - Shopping Cart</h2>
-<p style="color: #666; margin-bottom: 20px;">測試訂單輸入功能</p>
+<p style="color: #666; margin-bottom: 20px;">Test order input functionality</p>
 
 <!-- 當前購物車內容顯示 -->
 <div id="cartDisplay" class="cart-display">
 <h3>Current Cart Items:</h3>
 <div id="cartItems" class="cart-items">
-<p style="color: #999;">購物車是空的</p>
+<p style="color: #999;">Cart is empty</p>
 </div>
 </div>
 
@@ -20,25 +20,25 @@
 
 <div class="form-group">
 <label>Product ID:</label>
-<input id="productId" placeholder="輸入產品 ID (例如: PROD001)" type="text">
+<input id="productId" placeholder="Enter Product ID (e.g.: PROD001)" type="text">
 <div id="productInfo" class="info-display"></div>
 </div>
 
 <div class="form-group">
 <label>Customer ID:</label>
-<input id="customerId" placeholder="輸入客戶 ID (例如: 1)" type="number">
+<input id="customerId" placeholder="Enter Customer ID (e.g.: 1)" type="number">
 <div id="customerInfo" class="info-display"></div>
 </div>
 
 <div class="form-group">
 <label>Quantity:</label>
-<input id="quantity" placeholder="數量" type="number" min="1" value="1">
+<input id="quantity" placeholder="Quantity" type="number" min="1" value="1">
 </div>
 
 <div class="form-group">
 <label>Delivery Date:</label>
 <input id="deliveryDate" type="date" class="delivery-date-input">
-<small style="color: #666; display: block; margin-top: 5px;">選擇送貨日期（可選）</small>
+<small style="color: #666; display: block; margin-top: 5px;">Select delivery date (optional)</small>
 </div>
 
 <div class="button-group">
@@ -267,14 +267,14 @@ currentProduct = product;
 const infoDiv = document.getElementById('productInfo');
 infoDiv.innerHTML = `
 <div class="info-success">
-✓ 產品名稱: ${product.name} | 價格: $${product.price} | 分類: ${product.subclass}
+✓ Product Name: ${product.name} | Price: $${product.price} | Category: ${product.subclass}
 </div>
 `;
 })
 .catch(error => {
 currentProduct = null;
 document.getElementById('productInfo').innerHTML = `
-<div class="info-error">✗ 找不到產品 ID: ${productId}</div>
+<div class="info-error">✗ Product ID not found: ${productId}</div>
 `;
 });
 }
@@ -293,14 +293,14 @@ currentCustomer = customer;
 const infoDiv = document.getElementById('customerInfo');
 infoDiv.innerHTML = `
 <div class="info-success">
-✓ 客戶名稱: ${customer.name} | Email: ${customer.email}
+✓ Customer Name: ${customer.name} | Email: ${customer.email}
 </div>
 `;
 })
 .catch(error => {
 currentCustomer = null;
 document.getElementById('customerInfo').innerHTML = `
-<div class="info-error">✗ 找不到客戶 ID: ${customerId}</div>
+<div class="info-error">✗ Customer ID not found: ${customerId}</div>
 `;
 });
 }
@@ -308,18 +308,18 @@ document.getElementById('customerInfo').innerHTML = `
 // 添加到購物車
 function addToCart() {
 if (!currentProduct) {
-alert('請先輸入有效的產品 ID');
+alert('Please enter a valid Product ID');
 return;
 }
 
 if (!currentCustomer) {
-alert('請先輸入有效的客戶 ID');
+alert('Please enter a valid Customer ID');
 return;
 }
 
 const quantity = parseInt(document.getElementById('quantity').value);
 if (!quantity || quantity <= 0) {
-alert('請輸入有效的數量');
+alert('Please enter a valid quantity');
 return;
 }
 
@@ -346,7 +346,7 @@ document.getElementById('customerInfo').innerHTML = '';
 currentProduct = null;
 currentCustomer = null;
 
-alert('已添加到購物車！');
+alert('Added to cart!');
 }
 
 // 更新購物車顯示
@@ -354,7 +354,7 @@ function updateCartDisplay() {
 const cartItemsDiv = document.getElementById('cartItems');
 
 if (cart.length === 0) {
-cartItemsDiv.innerHTML = '<p style="color: #999;">購物車是空的</p>';
+cartItemsDiv.innerHTML = '<p style="color: #999;">Cart is empty</p>';
 return;
 }
 
@@ -363,16 +363,16 @@ let grandTotal = 0;
 
 cart.forEach((item, index) => {
 grandTotal += item.totalPrice;
-const deliveryInfo = item.deliveryDate ? `送貨日期: ${item.deliveryDate}` : '未設定送貨日期';
+const deliveryInfo = item.deliveryDate ? `Delivery: ${item.deliveryDate}` : 'No delivery date set';
 html += `
 <div class="cart-item">
 <div class="cart-item-info">
 <div class="cart-item-name">${item.product.name}</div>
 <div class="cart-item-details">
-客戶: ${item.customer.name} | 
-產品ID: ${item.product.id} | 
-單價: $${item.product.price} | 
-數量: ${item.quantity}
+Customer: ${item.customer.name} | 
+Product ID: ${item.product.id} | 
+Unit Price: $${item.product.price} | 
+Quantity: ${item.quantity}
 </div>
 <div class="cart-item-details" style="color: #e76f51; margin-top: 5px;">
 📅 ${deliveryInfo}
@@ -386,8 +386,8 @@ html += `
 
 html += `
 <div class="cart-summary">
-<div>總計: <span class="cart-summary-total">$${grandTotal.toFixed(2)}</span></div>
-<div style="font-size: 0.9em; margin-top: 5px;">共 ${cart.length} 項商品</div>
+<div>Total: <span class="cart-summary-total">$${grandTotal.toFixed(2)}</span></div>
+<div style="font-size: 0.9em; margin-top: 5px;">${cart.length} items</div>
 </div>
 `;
 
@@ -403,11 +403,11 @@ updateCartDisplay();
 // 清空購物車
 function clearCart() {
 if (cart.length === 0) {
-alert('購物車已經是空的');
+alert('Cart is already empty');
 return;
 }
 
-if (confirm('確定要清空購物車嗎？')) {
+if (confirm('Are you sure you want to clear the cart?')) {
 cart = [];
 updateCartDisplay();
 }
@@ -416,48 +416,55 @@ updateCartDisplay();
 // 提交訂單
 function submitOrder() {
 if (cart.length === 0) {
-alert('購物車是空的，無法提交訂單');
+alert('Cart is empty, cannot submit order');
 return;
 }
 
-if (!confirm(`確定要提交 ${cart.length} 個訂單嗎？`)) {
+if (!confirm(`Are you sure you want to submit ${cart.length} orders?`)) {
 return;
 }
 
-// 逐個創建訂單
-const promises = cart.map(item => {
-const orderData = {
+// 按客戶和送貨日期分組訂單
+const groupedOrders = {};
+
+cart.forEach(item => {
+const key = `${item.customer.id}_${item.deliveryDate || 'no-date'}`;
+if (!groupedOrders[key]) {
+groupedOrders[key] = {
 customer_id: item.customer.id,
+delivery_date: item.deliveryDate,
+items: []
+};
+}
+groupedOrders[key].items.push({
 product_id: item.product.id,
 quantity: item.quantity
-};
+});
+});
 
-// 如果有送貨日期，加入訂單資料
-if (item.deliveryDate) {
-orderData.delivery_date = item.deliveryDate;
-}
-
-return fetch('/api/orders', {
+// 為每組創建發票
+const promises = Object.values(groupedOrders).map(orderGroup => {
+return fetch('/api/invoices/create', {
 method: 'POST',
 headers: {
 'Content-Type': 'application/json'
 },
-body: JSON.stringify(orderData)
+body: JSON.stringify(orderGroup)
 });
 });
 
 Promise.all(promises)
 .then(responses => Promise.all(responses.map(r => r.json())))
 .then(results => {
-alert(`成功創建 ${results.length} 個訂單！`);
+alert(`Successfully created/updated ${results.length} invoice(s)!`);
 cart = [];
 updateCartDisplay();
-// 跳轉到訂單列表
+// 跳轉到發票列表
 window.location.href = '/invoices';
 })
 .catch(error => {
 console.error('Error submitting orders:', error);
-alert('提交訂單時發生錯誤');
+alert('Error occurred while submitting orders');
 });
 }
 </script>

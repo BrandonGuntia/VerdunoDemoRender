@@ -1,0 +1,323 @@
+{% extends "base.html" %}
+{% block title %}Cutting List Details{% endblock %}
+{% block content %}
+<div class="main">
+<div class="card">
+<div id="loading">Loading...</div>
+<div id="cuttingListDetails" style="display: none;">
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+<h2 id="pageTitle">📋 Cutting List</h2>
+<div>
+<button onclick="downloadPDF()" class="btn-pdf">📄 Download PDF</button>
+<button onclick="goBack()" class="btn-secondary">← Back</button>
+</div>
+</div>
+
+<!-- 日期信息 -->
+<div class="date-info-section">
+<div class="info-item">
+<span class="info-label">Delivery Date:</span>
+<span id="deliveryDate" class="info-value"></span>
+</div>
+<div class="info-item">
+<span class="info-label">Total Invoices:</span>
+<span id="totalInvoices" class="info-value"></span>
+</div>
+<div class="info-item">
+<span class="info-label">Total Customers:</span>
+<span id="totalCustomers" class="info-value"></span>
+</div>
+<div class="info-item">
+<span class="info-label">Total Amount:</span>
+<span id="totalAmount" class="info-value"></span>
+</div>
+</div>
+
+<!-- 客戶列表 -->
+<div id="customersContainer"></div>
+</div>
+</div>
+</div>
+
+<style>
+.date-info-section {
+background: linear-gradient(135deg, #e76f51 0%, #d15b42 100%);
+color: white;
+padding: 20px;
+border-radius: 8px;
+display: flex;
+justify-content: space-around;
+margin-bottom: 30px;
+box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.info-item {
+text-align: center;
+}
+
+.info-label {
+display: block;
+font-size: 0.9em;
+opacity: 0.9;
+margin-bottom: 5px;
+}
+
+.info-value {
+display: block;
+font-size: 1.5em;
+font-weight: bold;
+}
+
+.customer-section {
+background-color: #fff;
+border: 2px solid #2a9d8f;
+border-radius: 8px;
+padding: 20px;
+margin-bottom: 20px;
+cursor: pointer;
+transition: all 0.2s;
+}
+
+.customer-section:hover {
+box-shadow: 0 4px 12px rgba(42, 157, 143, 0.2);
+transform: translateX(5px);
+}
+
+.customer-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 15px;
+padding-bottom: 15px;
+border-bottom: 2px solid #2a9d8f;
+}
+
+.customer-name {
+font-size: 1.3em;
+font-weight: bold;
+color: #264653;
+}
+
+.customer-invoice-count {
+background-color: #2a9d8f;
+color: white;
+padding: 5px 15px;
+border-radius: 20px;
+font-size: 0.9em;
+font-weight: bold;
+}
+
+.invoice-list {
+margin-top: 10px;
+}
+
+.invoice-item {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 10px;
+margin-bottom: 8px;
+background-color: #f8f9fa;
+border-radius: 4px;
+border-left: 4px solid #e76f51;
+}
+
+.invoice-number {
+font-weight: bold;
+color: #264653;
+font-size: 0.95em;
+}
+
+.invoice-products {
+flex: 1;
+margin: 0 15px;
+}
+
+.product-item {
+display: inline-block;
+background-color: #e8f5f3;
+color: #2a9d8f;
+padding: 4px 10px;
+margin: 2px;
+border-radius: 12px;
+font-size: 0.85em;
+}
+
+.invoice-total {
+font-weight: bold;
+color: #e76f51;
+font-size: 1.1em;
+}
+
+button {
+padding: 10px 20px;
+border: none;
+border-radius: 4px;
+cursor: pointer;
+font-size: 1em;
+font-weight: bold;
+margin-left: 10px;
+}
+
+.btn-pdf {
+background-color: #e63946;
+color: white;
+}
+
+.btn-pdf:hover {
+background-color: #d62839;
+}
+
+.btn-secondary {
+background-color: #6c757d;
+color: white;
+}
+
+.btn-secondary:hover {
+background-color: #5a6268;
+}
+
+#loading {
+text-align: center;
+padding: 40px;
+color: #666;
+font-size: 1.1em;
+}
+
+.no-data {
+text-align: center;
+padding: 60px 20px;
+color: #999;
+font-size: 1.2em;
+}
+</style>
+
+<script>
+let currentDate = null;
+let invoices = [];
+let customerGroups = {};
+
+// 從 URL 獲取日期
+window.addEventListener('DOMContentLoaded', function() {
+const pathParts = window.location.pathname.split('/');
+currentDate = pathParts[pathParts.length - 1];
+console.log('Date from URL:', currentDate);
+loadCuttingListForDate();
+});
+
+// 載入指定日期的 Cutting List
+function loadCuttingListForDate() {
+fetch(`/api/invoices?date=${currentDate}`)
+.then(response => {
+if (!response.ok) {
+throw new Error('Network response was not ok');
+}
+return response.json();
+})
+.then(data => {
+console.log('Received invoices for date:', data.length);
+invoices = data;
+processCustomerGroups();
+displayCuttingList();
+document.getElementById('loading').style.display = 'none';
+document.getElementById('cuttingListDetails').style.display = 'block';
+})
+.catch(error => {
+console.error('Error loading cutting list:', error);
+document.getElementById('loading').innerHTML =
+`<p style="color: red;">Failed to load: ${error.message}</p>
+<p><a href="/cutting-list">Back to list</a></p>`;
+});
+}
+
+// 處理客戶分組
+function processCustomerGroups() {
+customerGroups = {};
+
+invoices.forEach(invoice => {
+const customerName = invoice.customer_name;
+if (!customerGroups[customerName]) {
+customerGroups[customerName] = {
+customer_id: invoice.customer_id,
+customer_email: invoice.customer_email,
+invoices: []
+};
+}
+customerGroups[customerName].invoices.push(invoice);
+});
+}
+
+// 顯示 Cutting List
+function displayCuttingList() {
+document.getElementById('pageTitle').textContent = `📋 Cutting List - ${currentDate}`;
+document.getElementById('deliveryDate').textContent = currentDate;
+document.getElementById('totalInvoices').textContent = invoices.length;
+document.getElementById('totalCustomers').textContent = Object.keys(customerGroups).length;
+
+const totalAmount = invoices.reduce((sum, inv) => sum + inv.total_amount, 0);
+document.getElementById('totalAmount').textContent = `$${totalAmount.toFixed(2)}`;
+
+// 顯示客戶列表
+const container = document.getElementById('customersContainer');
+container.innerHTML = '';
+
+if (invoices.length === 0) {
+container.innerHTML = '<div class="no-data">No orders for this date</div>';
+return;
+}
+
+// 按客戶名稱排序
+const sortedCustomers = Object.keys(customerGroups).sort();
+
+sortedCustomers.forEach(customerName => {
+const group = customerGroups[customerName];
+const customerSection = document.createElement('div');
+customerSection.className = 'customer-section';
+
+const invoicesList = group.invoices.map(invoice => {
+const products = invoice.items.map(item =>
+`<span class="product-item">${item.product_name} × ${item.quantity}</span>`
+).join('');
+
+return `
+<div class="invoice-item">
+<div class="invoice-number">${invoice.invoice_number}</div>
+<div class="invoice-products">${products}</div>
+<div class="invoice-total">$${invoice.total_amount.toFixed(2)}</div>
+</div>
+`;
+}).join('');
+
+customerSection.innerHTML = `
+<div class="customer-header">
+<div class="customer-name">👤 ${customerName}</div>
+<div class="customer-invoice-count">${group.invoices.length} invoices</div>
+</div>
+<div class="invoice-list">
+${invoicesList}
+</div>
+`;
+
+// 點擊客戶區域查看第一張發票
+customerSection.onclick = () => viewInvoice(group.invoices[0].id);
+
+container.appendChild(customerSection);
+});
+}
+
+// 查看發票
+function viewInvoice(invoiceId) {
+window.location.href = `/invoices/edit/${invoiceId}`;
+}
+
+// 下載 PDF
+function downloadPDF() {
+window.open(`/api/invoices/cutting-list/${currentDate}/pdf`, '_blank');
+}
+
+// 返回列表
+function goBack() {
+window.location.href = '/cutting-list';
+}
+</script>
+{% endblock %}

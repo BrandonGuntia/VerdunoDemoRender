@@ -36,7 +36,9 @@ async function loadCustomers() {
       const res = await fetch("/api/customers/");
       const data = await res.json();
       const list = document.getElementById("customerList");
-      list.innerHTML = "";
+      if (list) {
+          list.innerHTML = "";
+        }
       data.forEach(c => {
         const li = document.createElement("li");
         li.textContent = `${c.username} (${c.email})`;

@@ -46,10 +46,15 @@ input {
 display: block;
 width: 100%;
 padding: 10px;
-border: 1px solid #ccc;
+border: 2px solid #ddd;
 border-radius: 4px;
 box-sizing: border-box;
 font-size: 1em;
+}
+
+input:focus {
+outline: none;
+border-color: #2a9d8f;
 }
 
 input:readonly {
@@ -136,7 +141,7 @@ document.getElementById('editForm').style.display = 'block';
 .catch(error => {
 console.error('Error loading product:', error);
 document.getElementById('loading').innerHTML = 
-'<p style="color: red;">載入產品失敗</p>';
+'<p style="color: red;">Failed to load product</p>';
 });
 }
 
@@ -147,7 +152,7 @@ const price = document.getElementById('price').value;
 const subclass = document.getElementById('subclass').value;
 
 if (!name || !price || !subclass) {
-alert('請填寫所有欄位');
+alert('Please fill in all fields');
 return;
 }
 
@@ -174,13 +179,13 @@ window.location.href = '/products';
 })
 .catch(error => {
 console.error('Error updating product:', error);
-alert('更新產品失敗');
+alert('Failed to update product');
 });
 }
 
 // 刪除產品
 function deleteProduct() {
-if (!confirm('確定要刪除這個產品嗎？')) {
+if (!confirm('Are you sure you want to delete this product?')) {
 return;
 }
 
@@ -199,7 +204,7 @@ window.location.href = '/products';
 })
 .catch(error => {
 console.error('Error deleting product:', error);
-alert('刪除產品失敗');
+alert('Failed to delete product');
 });
 }
 

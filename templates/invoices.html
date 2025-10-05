@@ -4,12 +4,30 @@
 <div class="main">
 <div class="card">
 <h2>📄 Invoices System</h2>
+<p style="color: #666; margin-bottom: 20px;">Display all invoices grouped by delivery date</p>
 
-<!-- 搜索欄 -->
-<div class="search-container">
-<input id="searchInput" type="text" placeholder="🔍 Search by Invoice Number or Customer Name..." onkeyup="handleSearch(event)">
-<button onclick="searchInvoices()" class="btn-search">Search</button>
-<button onclick="clearSearch()" class="btn-clear">Clear</button>
+<!-- 搜索和篩選欄 -->
+<div class="filter-container">
+<input id="searchInput" type="text" placeholder="🔍 Search by Invoice Number or Customer Name..." onkeyup="handleSearch(event)" style="flex: 2;">
+<label for="dateFilter">Delivery Date:</label>
+<input type="date" id="dateFilter" onchange="filterByDate()">
+<button onclick="clearFilters()" class="btn-clear">Show All</button>
+</div>
+
+<!-- 統計數據 -->
+<div class="stats-container">
+<div class="stat-card">
+<div class="stat-label">Total Invoices</div>
+<div id="totalInvoices" class="stat-value">0</div>
+</div>
+<div class="stat-card">
+<div class="stat-label">Total Amount</div>
+<div id="totalAmount" class="stat-value">$0.00</div>
+</div>
+<div class="stat-card">
+<div class="stat-label">Pending</div>
+<div id="pendingInvoices" class="stat-value">0</div>
+</div>
 </div>
 
 <!-- 發票列表 -->
@@ -18,42 +36,35 @@
 </div>
 
 <style>
-.search-container {
+.filter-container {
 display: flex;
+align-items: center;
 gap: 10px;
 margin: 20px 0;
+padding: 15px;
+background-color: #f8f9fa;
+border-radius: 8px;
 }
 
-#searchInput {
-flex: 1;
-padding: 10px;
+.filter-container label {
+font-weight: bold;
+color: #264653;
+}
+
+#searchInput, #dateFilter {
+padding: 8px 12px;
 border: 2px solid #2a9d8f;
 border-radius: 4px;
 font-size: 1em;
 }
 
-#searchInput:focus {
+#searchInput:focus, #dateFilter:focus {
 outline: none;
 border-color: #21867a;
-box-shadow: 0 0 5px rgba(42, 157, 143, 0.3);
-}
-
-.btn-search {
-padding: 10px 20px;
-background-color: #2a9d8f;
-color: white;
-border: none;
-border-radius: 4px;
-cursor: pointer;
-font-size: 1em;
-}
-
-.btn-search:hover {
-background-color: #21867a;
 }
 
 .btn-clear {
-padding: 10px 20px;
+padding: 8px 20px;
 background-color: #6c757d;
 color: white;
 border: none;
@@ -66,8 +77,60 @@ font-size: 1em;
 background-color: #5a6268;
 }
 
+.stats-container {
+display: flex;
+gap: 15px;
+margin: 20px 0;
+}
+
+.stat-card {
+flex: 1;
+background: linear-gradient(135deg, #2a9d8f 0%, #21867a 100%);
+color: white;
+padding: 20px;
+border-radius: 8px;
+text-align: center;
+box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.stat-label {
+font-size: 0.9em;
+opacity: 0.9;
+margin-bottom: 10px;
+}
+
+.stat-value {
+font-size: 2em;
+font-weight: bold;
+}
+
 .invoices-container {
 margin-top: 20px;
+min-height: 200px;
+}
+
+.date-group {
+margin-bottom: 30px;
+}
+
+.date-header {
+background-color: #264653;
+color: white;
+padding: 12px 20px;
+border-radius: 8px;
+font-weight: bold;
+font-size: 1.1em;
+margin-bottom: 15px;
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+
+.date-count {
+background-color: rgba(255,255,255,0.2);
+padding: 5px 15px;
+border-radius: 20px;
+font-size: 0.9em;
 }
 
 .invoice-card {
@@ -75,14 +138,14 @@ background-color: #f9f9f9;
 border: 1px solid #ddd;
 border-radius: 8px;
 padding: 15px;
-margin-bottom: 15px;
+margin-bottom: 10px;
 cursor: pointer;
 transition: all 0.2s;
 }
 
 .invoice-card:hover {
-transform: translateY(-2px);
-box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+transform: translateX(5px);
+box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 background-color: #f0f0f0;
 }
 
@@ -124,21 +187,35 @@ color: white;
 .invoice-details {
 color: #666;
 font-size: 0.95em;
+display: flex;
+justify-content: space-between;
+align-items: center;
 }
 
-.invoice-details div {
+.invoice-info {
+flex: 1;
+}
+
+.invoice-info div {
 margin: 5px 0;
 }
 
 .invoice-customer {
 font-weight: bold;
 color: #2a9d8f;
+font-size: 1.05em;
+}
+
+.invoice-items-count {
+color: #666;
+font-size: 0.9em;
 }
 
 .invoice-total {
 font-weight: bold;
 color: #e76f51;
-font-size: 1.1em;
+font-size: 1.5em;
+text-align: right;
 }
 
 .no-results {
@@ -151,9 +228,13 @@ font-size: 1.1em;
 
 <script>
 let currentSearchTerm = '';
+let currentDateFilter = '';
+let allInvoices = [];
+let filteredInvoices = [];
 
 // 頁面載入時獲取發票
 window.addEventListener('DOMContentLoaded', function() {
+console.log('Invoices page loaded');
 loadInvoices();
 });
 
@@ -168,74 +249,162 @@ searchInvoices();
 function searchInvoices() {
 const searchInput = document.getElementById('searchInput');
 currentSearchTerm = searchInput.value.trim();
-loadInvoices(currentSearchTerm);
+applyFilters();
 }
 
-// 清除搜索
-function clearSearch() {
+// 按日期篩選
+function filterByDate() {
+const dateInput = document.getElementById('dateFilter');
+currentDateFilter = dateInput.value;
+applyFilters();
+}
+
+// 清除篩選
+function clearFilters() {
 document.getElementById('searchInput').value = '';
+document.getElementById('dateFilter').value = '';
 currentSearchTerm = '';
-loadInvoices();
+currentDateFilter = '';
+filteredInvoices = allInvoices;
+updateStats();
+displayInvoicesByDate();
+}
+
+// 應用篩選
+function applyFilters() {
+filteredInvoices = allInvoices.filter(invoice => {
+let matchSearch = true;
+let matchDate = true;
+
+if (currentSearchTerm) {
+matchSearch = invoice.invoice_number.toLowerCase().includes(currentSearchTerm.toLowerCase()) ||
+invoice.customer_name.toLowerCase().includes(currentSearchTerm.toLowerCase());
+}
+
+if (currentDateFilter) {
+matchDate = invoice.delivery_date === currentDateFilter;
+}
+
+return matchSearch && matchDate;
+});
+
+updateStats();
+displayInvoicesByDate();
 }
 
 // 載入發票列表
-function loadInvoices(searchTerm = '') {
-let url = '/api/orders';
-if (searchTerm) {
-url += `?search=${encodeURIComponent(searchTerm)}`;
-}
+function loadInvoices() {
+console.log('Fetching invoices from: /api/invoices');
 
-fetch(url)
+fetch('/api/invoices')
 .then(response => {
+console.log('Response status:', response.status);
 if (!response.ok) {
 throw new Error('Network response was not ok');
 }
 return response.json();
 })
-.then(orders => {
-const container = document.getElementById('invoicesContainer');
-container.innerHTML = '';
-
-if (orders.length === 0) {
-if (searchTerm) {
-container.innerHTML = `<div class="no-results">找不到符合 "${searchTerm}" 的發票</div>`;
-} else {
-container.innerHTML = '<div class="no-results">目前沒有發票資料</div>';
-}
-return;
-}
-
-orders.forEach(order => {
-const statusClass = `status-${order.status.toLowerCase()}`;
-const orderCard = document.createElement('div');
-orderCard.className = 'invoice-card';
-orderCard.onclick = () => viewInvoice(order.id);
-orderCard.innerHTML = `
-<div class="invoice-header">
-<div class="invoice-number">${order.invoice_number}</div>
-<div class="invoice-status ${statusClass}">${order.status}</div>
-</div>
-<div class="invoice-details">
-<div class="invoice-customer">客戶: ${order.customer_name}</div>
-<div>產品: ${order.product_name}</div>
-<div>數量: ${order.quantity} | 單價: ${order.product_price.toFixed(2)}</div>
-<div>訂單日期: ${order.order_date}</div>
-<div class="invoice-total">總價: ${order.total_price.toFixed(2)}</div>
-</div>
-`;
-container.appendChild(orderCard);
-});
+.then(invoices => {
+console.log('Received invoices:', invoices.length);
+allInvoices = invoices;
+filteredInvoices = invoices;
+updateStats();
+displayInvoicesByDate();
 })
 .catch(error => {
 console.error('Error loading invoices:', error);
-document.getElementById('invoicesContainer').innerHTML =
-'<div class="no-results" style="color: red;">載入發票失敗，請稍後再試</div>';
+const container = document.getElementById('invoicesContainer');
+if (container) {
+container.innerHTML =
+'<div class="no-results" style="color: red;">Failed to load invoices: ' + error.message + '</div>';
+}
+});
+}
+
+// 更新統計數據
+function updateStats() {
+const totalInvoices = filteredInvoices.length;
+const totalAmount = filteredInvoices.reduce((sum, inv) => sum + inv.total_amount, 0);
+const pendingCount = filteredInvoices.filter(inv => inv.status === 'Pending').length;
+
+document.getElementById('totalInvoices').textContent = totalInvoices;
+document.getElementById('totalAmount').textContent = `$${totalAmount.toFixed(2)}`;
+document.getElementById('pendingInvoices').textContent = pendingCount;
+}
+
+// 按送貨日期顯示發票
+function displayInvoicesByDate() {
+const container = document.getElementById('invoicesContainer');
+if (!container) {
+console.error('invoicesContainer element not found!');
+return;
+}
+container.innerHTML = '';
+
+if (filteredInvoices.length === 0) {
+container.innerHTML = '<div class="no-results">No invoice data available</div>';
+return;
+}
+
+// 按送貨日期分組
+const invoicesByDate = {};
+filteredInvoices.forEach(invoice => {
+const date = invoice.delivery_date;
+if (!invoicesByDate[date]) {
+invoicesByDate[date] = [];
+}
+invoicesByDate[date].push(invoice);
+});
+
+// 按日期排序（最新的在前）
+const sortedDates = Object.keys(invoicesByDate).sort((a, b) => b.localeCompare(a));
+
+// 顯示每個日期的發票
+sortedDates.forEach(date => {
+const invoices = invoicesByDate[date];
+const dateGroup = document.createElement('div');
+dateGroup.className = 'date-group';
+
+const dateHeader = document.createElement('div');
+dateHeader.className = 'date-header';
+dateHeader.innerHTML = `
+<span>📅 Delivery Date: ${date}</span>
+<span class="date-count">${invoices.length} invoices</span>
+`;
+dateGroup.appendChild(dateHeader);
+
+invoices.forEach(invoice => {
+const invoiceCard = document.createElement('div');
+invoiceCard.className = 'invoice-card';
+invoiceCard.onclick = () => viewInvoice(invoice.id);
+
+const statusClass = `status-${invoice.status.toLowerCase()}`;
+
+invoiceCard.innerHTML = `
+<div class="invoice-header">
+<div class="invoice-number">${invoice.invoice_number}</div>
+<div class="invoice-status ${statusClass}">${invoice.status}</div>
+</div>
+<div class="invoice-details">
+<div class="invoice-info">
+<div class="invoice-customer">Customer: ${invoice.customer_name}</div>
+<div class="invoice-items-count">📦 ${invoice.items_count} products</div>
+<div style="font-size: 0.85em; color: #999; margin-top: 5px;">Created: ${invoice.created_date}</div>
+</div>
+<div class="invoice-total">$${invoice.total_amount.toFixed(2)}</div>
+</div>
+`;
+dateGroup.appendChild(invoiceCard);
+});
+
+container.appendChild(dateGroup);
 });
 }
 
 // 查看發票詳情
-function viewInvoice(orderId) {
-window.location.href = `/invoices/edit/${orderId}`;
+function viewInvoice(invoiceId) {
+console.log('Viewing invoice:', invoiceId);
+window.location.href = `/invoices/edit/${invoiceId}`;
 }
 </script>
 {% endblock %}

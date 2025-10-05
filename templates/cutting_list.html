@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+{% block title %}Cutting List{% endblock %}
+{% block content %}
+<div class="main">
+<div class="card">
+<h2>📋 Cutting List</h2>
+<p style="color: #666; margin-bottom: 20px;">Display all production lists grouped by delivery date</p>
+
+<!-- 統計數據 -->
+<div class="stats-container">
+<div class="stat-card">
+<div class="stat-label">Total Delivery Dates</div>
+<div id="totalDates" class="stat-value">0</div>
+</div>
+<div class="stat-card">
+<div class="stat-label">Total Invoices</div>
+<div id="totalInvoices" class="stat-value">0</div>
+</div>
+<div class="stat-card">
+<div class="stat-label">Total Customers</div>
+<div id="totalCustomers" class="stat-value">0</div>
+</div>
+</div>
+
+<!-- 日期列表 -->
+<div id="datesContainer" class="dates-container"></div>
+</div>
+</div>
+
+<style>
+.stats-container {
+display: flex;
+gap: 15px;
+margin: 20px 0;
+}
+
+.stat-card {
+flex: 1;
+background: linear-gradient(135deg, #e76f51 0%, #d15b42 100%);
+color: white;
+padding: 20px;
+border-radius: 8px;
+text-align: center;
+box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.stat-label {
+font-size: 0.9em;
+opacity: 0.9;
+margin-bottom: 10px;
+}
+
+.stat-value {
+font-size: 2em;
+font-weight: bold;
+}
+
+.dates-container {
+margin-top: 20px;
+}
+
+.date-card {
+background-color: #f9f9f9;
+border: 2px solid #e76f51;
+border-radius: 8px;
+padding: 20px;
+margin-bottom: 15px;
+cursor: pointer;
+transition: all 0.3s;
+}
+
+.date-card:hover {
+transform: translateX(10px);
+box-shadow: 0 4px 12px rgba(231, 111, 81, 0.3);
+background-color: #fff;
+border-color: #d15b42;
+}
+
+.date-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+
+.date-title {
+font-size: 1.5em;
+font-weight: bold;
+color: #264653;
+display: flex;
+align-items: center;
+gap: 10px;
+}
+
+.date-icon {
+font-size: 1.2em;
+}
+
+.date-info {
+display: flex;
+gap: 20px;
+align-items: center;
+}
+
+.date-badge {
+background-color: #e76f51;
+color: white;
+padding: 8px 16px;
+border-radius: 20px;
+font-weight: bold;
+font-size: 0.9em;
+}
+
+.customer-badge {
+background-color: #2a9d8f;
+color: white;
+padding: 8px 16px;
+border-radius: 20px;
+font-weight: bold;
+font-size: 0.9em;
+}
+
+.date-details {
+margin-top: 15px;
+padding-top: 15px;
+border-top: 1px solid #ddd;
+color: #666;
+font-size: 0.95em;
+}
+
+.customer-list {
+display: flex;
+flex-wrap: wrap;
+gap: 10px;
+margin-top: 10px;
+}
+
+.customer-tag {
+background-color: #e8f5f3;
+color: #2a9d8f;
+padding: 5px 12px;
+border-radius: 15px;
+font-size: 0.85em;
+font-weight: bold;
+}
+
+.no-dates {
+text-align: center;
+padding: 60px 20px;
+color: #999;
+font-size: 1.2em;
+}
+
+.no-dates-icon {
+font-size: 4em;
+margin-bottom: 20px;
+opacity: 0.3;
+}
+</style>
+
+<script>
+let allInvoices = [];
+let dateGroups = {};
+
+// 頁面載入時獲取數據
+window.addEventListener('DOMContentLoaded', function() {
+console.log('Cutting List page loaded');
+loadCuttingList();
+});
+
+// 載入 Cutting List 數據
+function loadCuttingList() {
+fetch('/api/invoices')
+.then(response => {
+if (!response.ok) {
+throw new Error('Network response was not ok');
+}
+return response.json();
+})
+.then(invoices => {
+console.log('Received invoices:', invoices.length);
+allInvoices = invoices;
+processDateGroups();
+updateStats();
+displayDateGroups();
+})
+.catch(error => {
+console.error('Error loading cutting list:', error);
+document.getElementById('datesContainer').innerHTML =
+'<div class="no-dates"><div class="no-dates-icon">⚠️</div><div>Failed to load. Please try again later.</div></div>';
+});
+}
+
+// 處理日期分組
+function processDateGroups() {
+dateGroups = {};
+
+allInvoices.forEach(invoice => {
+const date = invoice.delivery_date;
+if (!dateGroups[date]) {
+dateGroups[date] = {
+invoices: [],
+customers: new Set(),
+totalAmount: 0
+};
+}
+dateGroups[date].invoices.push(invoice);
+dateGroups[date].customers.add(invoice.customer_name);
+dateGroups[date].totalAmount += invoice.total_amount;
+});
+
+// 轉換 Set 為 Array
+Object.keys(dateGroups).forEach(date => {
+dateGroups[date].customers = Array.from(dateGroups[date].customers);
+});
+}
+
+// 更新統計數據
+function updateStats() {
+const totalDates = Object.keys(dateGroups).length;
+const totalInvoices = allInvoices.length;
+const allCustomers = new Set();
+allInvoices.forEach(inv => allCustomers.add(inv.customer_name));
+
+document.getElementById('totalDates').textContent = totalDates;
+document.getElementById('totalInvoices').textContent = totalInvoices;
+document.getElementById('totalCustomers').textContent = allCustomers.size;
+}
+
+// 顯示日期分組
+function displayDateGroups() {
+const container = document.getElementById('datesContainer');
+container.innerHTML = '';
+
+if (Object.keys(dateGroups).length === 0) {
+container.innerHTML = `
+<div class="no-dates">
+<div class="no-dates-icon">📋</div>
+<div>No cutting list available</div>
+</div>
+`;
+return;
+}
+
+// 按日期排序（最新的在前）
+const sortedDates = Object.keys(dateGroups).sort((a, b) => b.localeCompare(a));
+
+sortedDates.forEach(date => {
+const group = dateGroups[date];
+const dateCard = document.createElement('div');
+dateCard.className = 'date-card';
+dateCard.onclick = () => viewCuttingList(date);
+
+const customerList = group.customers.map(name => 
+`<span class="customer-tag">${name}</span>`
+).join('');
+
+dateCard.innerHTML = `
+<div class="date-header">
+<div class="date-title">
+<span class="date-icon">📅</span>
+<span>${date}</span>
+</div>
+<div class="date-info">
+<span class="date-badge">${group.invoices.length} invoices</span>
+<span class="customer-badge">${group.customers.length} customers</span>
+</div>
+</div>
+<div class="date-details">
+<div style="margin-bottom: 10px;">
+<strong>Total Amount:</strong> $${group.totalAmount.toFixed(2)}
+</div>
+<div>
+<strong>Customers:</strong>
+<div class="customer-list">${customerList}</div>
+</div>
+</div>
+`;
+
+container.appendChild(dateCard);
+});
+}
+
+// 查看指定日期的 Cutting List
+function viewCuttingList(date) {
+console.log('Viewing cutting list for date:', date);
+window.location.href = `/cutting-list/${date}`;
+}
+</script>
+{% endblock %}
