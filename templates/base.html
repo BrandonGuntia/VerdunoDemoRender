@@ -3,24 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <script src="{{ url_for('static', filename='main.js') }}"></script>
-    <title>{% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <title>{% block title %}Management System{% endblock %}</title>
 </head>
 <body>
-    <nav class="navbar">
-        <ul class="nav-links">
-            <li><h2><a href="/">Dashboard</h2></li>
-            <li><a href="/products">📦 Products</a></li>
-            <li><a href="/customers">👥 Customers</a></li>
-            <li><a href="/invoices">📄 Invoices</a></li>
-            <li><a href="/cutting-list">📋 Cutting List</a></li>
-            <li><a href="/testing-input">🛒 Testing Input</a></li>
-            <li><a href="/login">🔑 Login</a></li>
-            <li><a href="/register">📝 Register</a></li>
+    <!-- 導航欄會根據 session 動態顯示 -->
+    <nav class="navbar" id="mainNav">
+        <ul class="nav-links" id="navLinks">
+            <!-- JavaScript 會動態載入導航項目 -->
         </ul>
     </nav>
-    {% block content %}
-    {% endblock %}
+    
+    {% block content %}{% endblock %}
+
+    <script>
+        // 頁面載入時檢查 session 並顯示對應的導航
+        window.addEventListener('DOMContentLoaded', function() {
+            loadNavigation();
+        });
+
+        function loadNavigation() {
+            fetch('/api/auth/check-session', {
+                credentials: 'include'
+            })
+            .then(response => response.json())
+            .then(data => {
+                const navLinks = document.getElementById('navLinks');
+                
+                if (data.logged_in) {
+                    if (data.user_type === 'admin') {
+                        // Admin 導航
+                        navLinks.innerHTML = `
+                            <li><h2><a href="/dashboard">Dashboard</a></h2></li>
+                            <li><a href="/products">📦 Products</a></li>
+                            <li><a href="/customers">👥 Customers</a></li>
+                            <li><a href="/invoices">📄 Invoices</a></li>
+                            <li><a href="/cutting-list">📋 Cutting List</a></li>
+                            <li><a href="/testing-input">🛒 Testing Input</a></li>
+                            <li><a href="#" onclick="logout()">🚪 Logout</a></li>
+                        `;
+                    } else {
+                        // 普通用戶導航（只有 Testing Input）
+                        navLinks.innerHTML = `
+                            <li><h2><a href="/testing-input">🛒 Testing Input</a></h2></li>
+                            <li><a href="#" onclick="logout()">🚪 Logout</a></li>
+                        `;
+                    }
+                } else {
+                    // 未登入導航
+                    navLinks.innerHTML = `
+                        <li><h2><a href="/login">Login</a></h2></li>
+                        <li><a href="/register">Register</a></li>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Navigation error:', error);
+            });
+        }
+
+        // 登出功能
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                fetch('/api/auth/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    window.location.href = '/login';
+                })
+                .catch(error => {
+                    console.error('Logout error:', error);
+                    window.location.href = '/login';
+                });
+            }
+            return false; // 防止 a 標籤跳轉
+        }
+    </script>
 </body>
 </html>

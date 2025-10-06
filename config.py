@@ -1,8 +1,27 @@
 import os
 
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-
 class Config:
-    SQLALCHEMY_DATABASE_URI = f"sqlite:///{os.path.join(BASE_DIR, 'ecommerce.db')}"
+    # 秘密金鑰
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-please-change-in-production'
+    
+    # Session 配置
+    SESSION_TYPE = 'filesystem'
+    SESSION_PERMANENT = False
+    SESSION_USE_SIGNER = True
+    PERMANENT_SESSION_LIFETIME = 3600  # 1 小時
+    
+    # 數據庫配置
+    DATABASE_URL = os.environ.get('DATABASE_URL')
+    
+    if DATABASE_URL:
+        if DATABASE_URL.startswith('postgres://'):
+            DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+        SQLALCHEMY_DATABASE_URI = DATABASE_URL
+    else:
+        SQLALCHEMY_DATABASE_URI = 'sqlite:///database.db'
+    
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SECRET_KEY = "your_secret_key"  # Flask session / JWT 會用到
+    
+    # CORS 設置
+    CORS_HEADERS = 'Content-Type'
+    CORS_SUPPORTS_CREDENTIALS = True

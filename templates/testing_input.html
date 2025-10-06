@@ -3,6 +3,9 @@
 {% block content %}
 <div class="main">
 <div class="card">
+<div class="user-info-bar">
+<span id="currentUser">Welcome</span>
+</div>
 <h2>🛒 Testing Input - Shopping Cart</h2>
 <p style="color: #666; margin-bottom: 20px;">Test order input functionality</p>
 
@@ -230,12 +233,43 @@ text-align: right;
 font-size: 1.5em;
 font-weight: bold;
 }
+
+.user-info-bar {
+    background-color: #f8f9fa;
+    padding: 10px 15px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#currentUser {
+    color: #264653;
+    font-weight: 600;
+}
+
 </style>
 
 <script>
 let cart = [];
 let currentProduct = null;
 let currentCustomer = null;
+
+// 頁面載入時獲取用戶信息
+window.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/auth/check-session', {
+        credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.logged_in) {
+            document.getElementById('currentUser').textContent = `Welcome, ${data.username}`;
+        } else {
+            window.location.href = '/login';
+        }
+    });
+});
 
 // 監聽產品 ID 輸入
 document.getElementById('productId').addEventListener('blur', function() {
